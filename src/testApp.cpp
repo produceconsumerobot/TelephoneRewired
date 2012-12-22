@@ -4,9 +4,12 @@
 void testApp::setup(){
 
 	// **** COMPUTER SPECIFIC VARIABLES **** //
-	string arduinoPort = "\\\\.\\COM24"; // Sean, Windows, Uno
+	//string arduinoPort = "\\\\.\\COM24"; // Sean, Windows, Uno
+	string arduinoPort = "tty.usbmodemfa141"; // Sean, Mac, Arduino Decimila
 	//string arduinoPort = "/dev/cu.usbserial-A70064Yu"; // Sean, Mac, Arduino Decimila
-	string zeoPort = "\\\\.\\COM26";
+    //tty.usbmodemfa141
+    //cu.usbmodemfa141
+	//string zeoPort = "\\\\.\\COM26";
 	// **** END COMPUTER SPECIFIC VARIABLES **** //
 
 
@@ -96,12 +99,13 @@ void testApp::setup(){
 	midiout.openPort(0);
 	freqOutThread.setupMidi(&midiout, midiChannel, midiId, midiValue);
 	// Setup zeo
-	zeo.setupSerial(zeoPort, 38400);
+	//zeo.setupSerial(zeoPort, 38400);
 
 	//ofSetupOpenGL(1920,1200, OF_FULLSCREEN);
 	//ofSetWindowShape(1920,1200);
 	//ofSetBackgroundAuto(false);
-	//ofSetVerticalSync(true);
+	ofSetVerticalSync(true);
+    
 
 	outState = true;
 	prevLoopTime = ofGetElapsedTimef();
@@ -117,7 +121,7 @@ void testApp::setup(){
 	// Start outputs thread
 	freqOutThread.startThread(true, false);
 	// Start zeo thread
-	zeo.startThread(true, false);
+	//zeo.startThread(true, false);
 
 	// **** END GENERAL SETUP **** //
 }
@@ -132,7 +136,8 @@ void testApp::update(){
 void testApp::draw(){
 	
 	// ***** Code for testing the output display delays ***** //
-	if (outState != freqOutThread.getCurrentOutState()) {
+	/*
+     if (outState != freqOutThread.getCurrentOutState()) {
 		outState = !outState;
 		int outDelay = ((int)((ofGetElapsedTimef() - prevLoopTime)*1000)) - freqOutThread.getCurrentOutDelay();
 		int absOutDelay = abs(outDelay);
@@ -147,13 +152,23 @@ void testApp::draw(){
 		printf("absMax: %i, absAve: %.1f, Delay: %i\n", absMaxOutDelay, absAveOutDelay, outDelay);
 		prevLoopTime = ofGetElapsedTimef();
 	}
+     */
 	// ***** END Code for testing the output display delays ***** //
 	
+    if (freqOutThread.getCurrentOutState()) {
+        ofBackground(0, 0, 0);
+    } else {
+        ofBackground(255, 255, 255);
+    }
+    
 
 	//printf("draw() - %f (s)\n", ofGetElapsedTimef());
 	
 	//ofSetBackgroundColor(255,255,255);
 	//ofSleepMillis(1);
+    
+    //ofBackground(0, 0, 0);
+    //ofSetBackgroundColor(0, 0, 0);
 }
 
 //--------------------------------------------------------------
@@ -173,6 +188,7 @@ void testApp::keyPressed(int key){
     }
 	if (((char) key) == '1') {
         midiout.sendControlChange(midiChannel, midiId, midiValue);
+        printf("1");
     } 
 	if ( key == 'f') {
 		ofToggleFullscreen();

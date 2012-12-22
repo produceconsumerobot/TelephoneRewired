@@ -21,7 +21,7 @@ FreqOutThread::FreqOutThread() {
 	_freqIterator = 0;
 	_currentStartTime = 0.0;
 	_sendMidi = true;
-	_printOut = false;
+	_printOut = true;
 }
 
 FreqOutThread::~FreqOutThread() {
@@ -77,8 +77,23 @@ void FreqOutThread::setupArduino(const int & version) {
 	cout << _arduino.getFirmwareName() << endl; 
 	cout << "firmata v" << _arduino.getMajorFirmwareVersion() << "." << _arduino.getMinorFirmwareVersion() << endl;
 	// set pin D13 as digital output
-	//_arduino.sendDigitalPinMode(13, ARD_OUTPUT);
-	_arduino.sendDigitalPinMode(11, ARD_PWM);
+	_arduino.sendDigitalPinMode(11, ARD_OUTPUT);
+    _arduino.update();
+	_arduino.sendDigitalPinMode(10, ARD_OUTPUT);
+    _arduino.update();
+	_arduino.sendDigitalPinMode(9, ARD_OUTPUT);
+    _arduino.update();
+    _arduino.sendDigitalPinMode(12, ARD_OUTPUT);
+    _arduino.update();
+    _arduino.sendDigitalPinMode(13, ARD_OUTPUT);
+    _arduino.update();
+    //_arduino.sendDigital(12, ARD_LOW);
+    //_arduino.sendDigital(12, ARD_HIGH);
+    //_arduino.update();
+    //_arduino.sendDigital(13, ARD_LOW);
+    //_arduino.sendDigital(13, ARD_HIGH);
+    //_arduino.update();
+	//_arduino.sendDigitalPinMode(11, ARD_PWM);
 }
 
 void FreqOutThread::SetFreqCycle(int nFreqs, float freqs[][2]) {
@@ -155,10 +170,17 @@ void FreqOutThread::threadedFunction() {
 
 					// Send arduino output
 
-					//_arduino.sendDigital(13, ARD_HIGH);
-					_arduino.sendPwm(_ledPin, _ledBrightness);
+					_arduino.sendDigital(9, ARD_LOW);
+                    _arduino.update();
+                    _arduino.sendDigital(10, ARD_LOW);
+                    _arduino.update();
+                    _arduino.sendDigital(11, ARD_LOW);
+                    _arduino.update();
+                    _arduino.sendDigital(12, ARD_HIGH);
+                    _arduino.update();
+					//_arduino.sendPwm(_ledPin, _ledBrightness);
 				}
-				ofBackground(255,255,255);
+				//ofBackground(255,255,255);
 			} else {
 
 				if (_sendMidi) {
@@ -169,10 +191,17 @@ void FreqOutThread::threadedFunction() {
 
 					// Send arduino output
 
-					//_arduino.sendDigital(13, ARD_LOW);
-					_arduino.sendPwm(_ledPin, 0);
+					_arduino.sendDigital(9, ARD_HIGH);
+                    _arduino.update();
+                    _arduino.sendDigital(10, ARD_HIGH);
+                    _arduino.update();
+                    _arduino.sendDigital(11, ARD_HIGH);
+                    _arduino.update();
+                    _arduino.sendDigital(12, ARD_HIGH);
+                    _arduino.update();
+					//_arduino.sendPwm(_ledPin, 0);
 				}
-				ofBackground(0,0,0);
+				//ofBackground(0,0,0);
 			}
 
 			_arduino.update(); // Need to do this periodically or things get weird

@@ -6,7 +6,7 @@
 #include "zeo.h"
 
 class MyThread : public ofThread {
-	void MyThread::threadedFunction() {
+	void threadedFunction() {
 		while (isThreadRunning()) {
 			//printf("2 - %s\n", ofGetTimestampString().c_str());
 			ofSleepMillis(10);
