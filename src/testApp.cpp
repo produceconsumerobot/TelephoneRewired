@@ -4,16 +4,21 @@
 void testApp::setup(){
 
 	// **** COMPUTER SPECIFIC VARIABLES **** //
-	//string arduinoPort = "\\\\.\\COM24"; // Sean, Windows, Uno
-	string arduinoPort = "tty.usbmodemfa141"; // Sean, Mac, Arduino Decimila
+	string arduinoPort = "\\\\.\\COM28"; // Sean, Windows, Uno
+	//string arduinoPort = "tty.usbmodemfa141"; // Sean, Mac, Arduino Decimila
 	//string arduinoPort = "/dev/cu.usbserial-A70064Yu"; // Sean, Mac, Arduino Decimila
     //tty.usbmodemfa141
     //cu.usbmodemfa141
-	//string zeoPort = "\\\\.\\COM26";
+	string zeoPort = "\\\\.\\COM26";
 	// **** END COMPUTER SPECIFIC VARIABLES **** //
 
 
 	// **** OPTIONS **** //
+
+	showStimuli = false;
+	showOscilloscope = true;
+	showScreenEntrainment = false;
+
 
 	// Set up the frequency cycle here
 	// First number of each pair sets the frequency
@@ -104,6 +109,7 @@ void testApp::setup(){
 	//ofSetupOpenGL(1920,1200, OF_FULLSCREEN);
 	//ofSetWindowShape(1920,1200);
 	//ofSetBackgroundAuto(false);
+	ofBackground(255, 255, 255);
 	ofSetVerticalSync(true);
     
 
@@ -113,28 +119,193 @@ void testApp::setup(){
 	absAveOutDelay = 0;
 	prevFreq = 0;
 
-		
+	zeoThread.setupSerial(zeoPort);
+	ofAddListener(zeoThread.newRawData, this, &testApp::newZeoRawData);
+	ofAddListener(zeoThread.newSliceData, this, &testApp::newZeoSliceData);
+	
 	//ofAddListener(zeo.dataReady,this,&testApp::newData);
 	
+	SetupOscilloscopes();
+
 	// Start threads
-	thread.startThread(true, false);
 	// Start outputs thread
 	freqOutThread.startThread(true, false);
 	// Start zeo thread
-	//zeo.startThread(true, false);
+	zeoThread.startThread(true, false);
+	//logger.addData(LoggerData(ofGetElapsedTimef(), LoggerData::ENTRAINMENT_FREQ, freqOutThread.GetCurrentFreq()));
 
+	//logger.startThread(true, false);
+
+	stimuli[0].loadImage("data/images/01.jpg");
+	stimuli[1].loadImage("data/images/02.jpg");
+	stimuli[2].loadImage("data/images/03.jpg");
+
+	counter = 0;
 	// **** END GENERAL SETUP **** //
 }
+
+//--------------------------------------------------------------
+void testApp::SetupOscilloscopes(){
+	// Setup oscilloscopes
+	int nScopes = 4;
+	ofPoint min = ofPoint(0., 10.);
+	ofPoint max = ofPoint(ofGetWindowSize().x, ofGetWindowSize().y-10);
+	scopeWin = ofxMultiScope(nScopes, min, max);
+	int rawTimeWindow = 15;
+	int powerTimeWindow = 300;
+	{ // Filtered EEG Scope
+		const int nVariables = 1;
+		ofColor colors[nVariables] = {ofColor(0,200,0)};
+		string names[nVariables] = {"Filt EEG"};
+		scopeWin.scopes[0].setup(rawTimeWindow, ZeoParser::RAW_DATA_LEN, names, colors, nVariables, 7., 0.);
+	}
+	{ // Power Data Scope
+		const int nVariables = ZeoParser::NUM_FREQS;
+		ofColor colors[nVariables] = {ofColor(200,0,0), ofColor(0,200,0), ofColor(0,0,200), 
+			ofColor(0,200,200), ofColor(200,0,200), ofColor(200,200,0), ofColor(100,100,100)};
+		string names[nVariables];
+		for (int i=0; i<nVariables; i++) {
+			names[i] = ZeoParser::labels[i];
+		}
+		scopeWin.scopes[1].setup(powerTimeWindow, 1, names, colors, nVariables, 0.07, -350.);
+	}
+	{ // Entrainment Signal Scope
+		const int nVariables = NUM_ENTRAINMENT_FREQS;
+		ofColor colors[nVariables] = {ofColor(200,0,0), ofColor(0,200,0), ofColor(0,0,200), 
+			ofColor(0,200,200), ofColor(100,100,100)};
+		string names[nVariables] = {"DELTA", "THETA", "ALPHA", "BETA", "GAMMA"};
+		scopeWin.scopes[2].setup(powerTimeWindow, 1, names, colors, nVariables, 750, -350.);
+	}
+	{ // Data Reliability Scope
+		const int nVariables = 3;
+		ofColor colors[nVariables] = {ofColor(200,0,0), ofColor(0,200,0), ofColor(0,0,200)};
+		string names[nVariables] = {"Impedance", "SQI", "Signal"};
+		scopeWin.scopes[3].setup(powerTimeWindow, 1, names, colors, nVariables, 0.5, -350.);
+	}
+	
+	// Initialize Oscilloscope data arrays	
+	rawData.resize(1, vector<float>(ZeoParser::RAW_DATA_LEN, 0));
+	filtData.resize(1, vector<float>(ZeoParser::RAW_DATA_LEN, 0));
+	powerData.resize(ZeoParser::NUM_FREQS, vector<float>(1, 0));
+	sliceData.resize(3, vector<float>(1, 0));
+	entrainmentFreqData.resize(NUM_ENTRAINMENT_FREQS, vector<float>(1, 0));
+}
+
+//--------------------------------------------------------------
+// Function to handle new zeo raw data
+void testApp::newZeoRawData(bool & ready){
+#ifdef DEBUG_PRINT
+	printf("testApp::newZeoRawData\n"); 
+#endif
+
+	ZeoParser zeo = zeoThread.getZeoParser();
+
+	// Get Zeo raw & filtered data
+	float zeoData[ZeoParser::RAW_DATA_LEN];
+	zeo.getFilteredData(zeoData);
+
+	//printf("zeo.RAW_DATA_LEN=%i\n", zeo.RAW_DATA_LEN);
+	// Update filtered data in scope
+	for (int i=0; i<ZeoParser::RAW_DATA_LEN; i++) {
+		//printf("%i,",i);
+		rawData[0][i] = zeoData[i];
+	}
+	printf("    Raw Data:");
+	for (int i=0; i<6; i++) {
+		printf(" %f, %f;", rawData[0][i], zeoData[i]);
+	}
+	printf("\n");
+	scopeWin.scopes[0].updateData(rawData, ZeoParser::RAW_DATA_LEN);
+
+	//LoggerData temp = LoggerData(ofGetElapsedTimef(), LoggerData::RAW_DATA, &zeoData);
+	//logger.addData(temp);
+
+	// TODO raw the data to the logger
+}
+
+//--------------------------------------------------------------
+// Function to handle new zeo slice data
+void testApp::newZeoSliceData(bool & ready){
+#ifdef DEBUG_PRINT 
+	printf("testApp::newZeoSliceData\n"); 
+#endif
+
+	ZeoParser zeo = zeoThread.getZeoParser();
+
+	// Get Zeo Slice Data
+	ZeoSlice zeoSlice;
+	zeo.getSlice(&zeoSlice);
+
+	// Update Power Data in scope
+	for (int i=0; i<ZeoParser::NUM_FREQS; i++) {
+		powerData[i][0] = (float) zeoSlice.power[i];
+		printf("    %s: %f, %i\n", ZeoParser::labels[i], powerData[i][0], zeoSlice.power[i]);
+	}
+	scopeWin.scopes[1].updateData(powerData, 1);
+
+	// Update signal quality in scope
+	sliceData[0][0] = zeoSlice.impendance;
+	sliceData[1][0] = zeoSlice.sqi*40; // multiply for display
+	sliceData[2][0] = zeoSlice.signal*1500; // multiply for display
+	scopeWin.scopes[3].updateData(sliceData, 1);
+
+	//LoggerData * temp = new LoggerData(ofGetElapsedTimef(), LoggerData::SLICE_DATA, zeoSlice);
+	//int testing = 1;
+	//logger.addData(*temp);
+	//delete temp;
+
+	// TODO slice data to the logger
+
+	plotEntrainmentFreqData(freqOutThread.GetCurrentFreq());
+}
+
+//--------------------------------------------------------------
+// Function to handle new entrainment data
+void testApp::entrainmentOutChange(bool & output){
+
+}
+
+void testApp::plotEntrainmentFreqData(float freq) {
+#ifdef DEBUG_PRINT 
+	printf("testApp::plotEntrainmentFreqData\n"); 
+#endif
+	for (int i=0; i<NUM_ENTRAINMENT_FREQS; i++) {
+		entrainmentFreqData[i][0] = 0.;
+	}
+	if ((int) freq == (int) DELTA) entrainmentFreqData[0][0] = 1.;
+	if ((int) freq == (int) THETA) entrainmentFreqData[1][0] = 1.;
+	if ((int) freq == (int) ALPHA) entrainmentFreqData[2][0] = 1.;
+	if ((int) freq == (int) BETA) entrainmentFreqData[3][0] = 1.;
+	if ((int) freq == (int) GAMMA) entrainmentFreqData[4][0] = 1.;
+	printf("Entrainment = %f: ", freq);
+	for (int i=0; i<NUM_ENTRAINMENT_FREQS; i++) {
+		printf("%f, ", entrainmentFreqData[i][0]);
+	}
+	printf("\n");
+	scopeWin.scopes[2].updateData(entrainmentFreqData, 1);
+}
+
+//--------------------------------------------------------------
+// Function to handle new entrainment data
+void testApp::entrainmentFreqChange(float & freq){
+	
+}
+
 
 //--------------------------------------------------------------
 void testApp::update(){
 	//printf("update(): %f\n", ofGetElapsedTimef());
 	//printf("%s\n", ofGetTimestampString().c_str());
+	
 }
 
 //--------------------------------------------------------------
 void testApp::draw(){
-	
+	//LoggerData temp = LoggerData(ofGetElapsedTimef(), LoggerData::ENTRAINMENT_FREQ, freqOutThread.GetCurrentFreq());
+	//LoggerData temp = LoggerData(ofGetElapsedTimef(), "EF", freqOutThread.GetCurrentFreq());
+	//logger.addData(temp);
+	//temp = LoggerData(ofGetElapsedTimef(), "EO", freqOutThread.getCurrentOutState());
+	//logger.addData(temp);
 	// ***** Code for testing the output display delays ***** //
 	/*
      if (outState != freqOutThread.getCurrentOutState()) {
@@ -154,13 +325,34 @@ void testApp::draw(){
 	}
      */
 	// ***** END Code for testing the output display delays ***** //
-	
-    if (freqOutThread.getCurrentOutState()) {
-        ofBackground(0, 0, 0);
-    } else {
-        ofBackground(255, 255, 255);
-    }
-    
+
+	// Screen-based entrainment
+	if (showScreenEntrainment) {
+		if (freqOutThread.getCurrentOutState()) {
+			ofBackground(0, 0, 0);
+		} else {
+			ofBackground(255, 255, 255);
+		}
+	}
+
+	// Stimulus presentation
+	if (showStimuli) {
+		if (counter < 60*1) {
+			stimuli[0].draw(100,100);
+		} else if (counter < 60*2) {
+			stimuli[1].draw(100,100);
+		} else if (counter < 60*3) {
+			stimuli[2].draw(100,100);
+		} else if (counter > 60*4) {
+			counter = 0;
+		}
+		counter ++;
+	}
+
+	// Draw oscilloscope data
+	if (showOscilloscope) {
+		scopeWin.plot();
+	}
 
 	//printf("draw() - %f (s)\n", ofGetElapsedTimef());
 	
@@ -175,7 +367,7 @@ void testApp::draw(){
 void testApp::exit(){
 	printf("exit()");
 	// Stop threads
-	thread.stopThread();
+	zeoThread.stopThread();
 	freqOutThread.stopThread();
 	midiout.closePort();
 }

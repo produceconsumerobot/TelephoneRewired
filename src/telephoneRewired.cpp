@@ -21,7 +21,7 @@ FreqOutThread::FreqOutThread() {
 	_freqIterator = 0;
 	_currentStartTime = 0.0;
 	_sendMidi = true;
-	_printOut = true;
+	_printOut = false;
 }
 
 FreqOutThread::~FreqOutThread() {
@@ -237,4 +237,299 @@ void FreqOutThread::threadedFunction() {
 	}
 	if (_printOut) printf("FreqOutThread Finished\n");
 
+}
+
+ZeoReaderThread::ZeoReaderThread() {
+	_zeoReady = false;
+}
+
+ZeoReaderThread::~ZeoReaderThread() {
+	if (isThreadRunning()) lock();
+	_zeoReady = false;
+	if (isThreadRunning()) unlock();
+	_serial.close();
+}
+
+void ZeoReaderThread::setupSerial(string serialPort) {
+	printf("ZeoReaderThread::setupSerial(%s)\n", serialPort.c_str());
+	_serial.listDevices();
+	//printf("connecting to serial port: %s\n", serialPort.c_str());
+	_serial.setup(serialPort, 38400);
+	
+	// TODO: add some logic to test serial port is ready
+	_zeoReady = true;
+}
+
+ZeoParser ZeoReaderThread::getZeoParser() {
+	return _zeo;
+}
+
+void ZeoReaderThread::threadedFunction() {
+	const int BUFFER_SIZE = 4096;
+	static char buffer[BUFFER_SIZE];
+	static int available = 0;
+
+	while (isThreadRunning()) {
+		lock();
+
+		bool spliceDataReady = false;
+		bool rawDataReady = false;
+
+		if (_zeoReady) {
+			//printf("_serial.readBytes\n");
+			int count = _serial.readBytes((unsigned char *) buffer + available, BUFFER_SIZE - available);
+			//printf("serial.count=%i\n", count);
+
+			if (count < 0) {
+				fprintf(stderr, "Error reading data!\n");
+				//exit();
+			};
+			if (count > 0) {
+				available += count;
+
+				int remaining = _zeo.parsePacket(buffer, available, &spliceDataReady, &rawDataReady);
+
+				memmove(buffer, buffer + available - remaining, remaining);
+				available = remaining;
+			}
+		}
+
+		// Send Callbacks if we've got new data
+		if (spliceDataReady) ofNotifyEvent(newSliceData, spliceDataReady, this);
+		if (rawDataReady) ofNotifyEvent(newRawData, rawDataReady, this);
+
+		unlock();
+		ofSleepMillis(1);
+	}
+}
+
+// ------------------------------------------------------- 
+// LoggerData()
+// -------------------------------------------------------
+LoggerData::LoggerData() {
+	_ofTimestamp = -1;
+	_dataTypeTag = "-1";
+	_dataPayload = NULL;
+}
+LoggerData::LoggerData(float ofTimestamp, string dataTypeTag) {
+	_ofTimestamp = ofTimestamp;
+	_dataTypeTag = dataTypeTag;
+	_dataPayload = NULL;
+}
+/*
+LoggerData::LoggerData(float ofTimestamp, string dataTypeTag, void * payload) {
+	LoggerData(ofTimestamp, dataTypeTag);
+	if (_dataTypeTag.compare(RAW_DATA)) {
+		float * data = new float[ZeoParser::RAW_DATA_LEN];
+		float * temp = (float *) payload;
+		for (int i=0; i<ZeoParser::RAW_DATA_LEN; i++) {
+			data[i] = temp[i];
+		}
+		_dataPayload = data;
+	} else if (_dataTypeTag.compare(SLICE_DATA)){
+		ZeoSlice * data = new ZeoSlice();
+		ZeoSlice * temp = (ZeoSlice *) payload;
+		temp->copyTo(data);
+		_dataPayload = data;
+	} else if (_dataTypeTag.compare(IS_ENTRAINMENT_ON)){
+		bool * data = new bool;
+		bool * temp = (bool *) payload;
+		*data = temp;
+		_dataPayload = data;
+	} else if (_dataTypeTag.compare(ENTRAINMENT_FREQ)){
+	} else {
+		fprintf(stderr, "LoggerData::~LoggerData() dataTypeTag %s unknown\n", _dataTypeTag);
+	}
+}
+*/
+LoggerData::LoggerData(float ofTimestamp, string dataTypeTag, float rawData[ZeoParser::RAW_DATA_LEN]) {
+	//LoggerData(ofTimestamp, dataTypeTag);
+	_ofTimestamp = ofTimestamp;
+	_dataTypeTag = dataTypeTag;
+	float * data = new float[ZeoParser::RAW_DATA_LEN];
+	for (int i=0; i<ZeoParser::RAW_DATA_LEN; i++) {
+		data[i] = rawData[i];
+	}
+	_dataPayload = data;
+}
+LoggerData::LoggerData(float ofTimestamp, string dataTypeTag, ZeoSlice &zeoSlice) {
+	//LoggerData(ofTimestamp, dataTypeTag);
+	_ofTimestamp = ofTimestamp;
+	_dataTypeTag = dataTypeTag;
+	ZeoSlice * data = new ZeoSlice();
+	zeoSlice.copyTo(data);
+	_dataPayload = data;
+}
+LoggerData::LoggerData(float ofTimestamp, string dataTypeTag, bool boolIn) {
+	//LoggerData(ofTimestamp, dataTypeTag);
+	_ofTimestamp = ofTimestamp;
+	_dataTypeTag = dataTypeTag;
+	bool * data = new bool;
+	*data = boolIn;
+	_dataPayload = data;
+}
+LoggerData::LoggerData(float ofTimestamp, string dataTypeTag, float floatIn) {
+	//LoggerData(ofTimestamp, dataTypeTag);
+	_ofTimestamp = ofTimestamp;
+	_dataTypeTag = dataTypeTag;
+	float * data = new float;
+	*data = floatIn;
+	_dataPayload = data;
+}
+LoggerData::~LoggerData() {
+	if (_dataTypeTag.compare(RAW_DATA) == 0) {
+		//if (_dataPayload != NULL) delete[] (float*) _dataPayload;
+	} else if (_dataTypeTag.compare(SLICE_DATA) == 0){
+		//if (_dataPayload != NULL) delete (ZeoSlice*) _dataPayload;
+		//if (_dataPayload != NULL) delete _dataPayload;
+		ZeoSlice* temp = (ZeoSlice*) _dataPayload;
+		if (_dataPayload != NULL) 
+			//;
+			delete temp;
+	} else if (_dataTypeTag.compare(IS_ENTRAINMENT_ON) == 0){
+		//if (_dataPayload != NULL) delete (bool*) _dataPayload;
+	} else if (_dataTypeTag.compare(ENTRAINMENT_FREQ) == 0){
+		float* temp = (float*) _dataPayload;
+		float value = *temp;
+		//if (_dataPayload != NULL) delete temp;
+	} else if (_dataTypeTag.compare("-1") == 0){
+	} else {
+		fprintf(stderr, "LoggerData::~LoggerData() dataTypeTag %s unknown\n", _dataTypeTag);
+	}
+
+	_ofTimestamp = -1;
+	_dataTypeTag = "-1";
+	_dataPayload = NULL;
+}
+float LoggerData::getTimeStamp() {
+	return _ofTimestamp;
+}
+string LoggerData::getTypeTag() {
+	return _dataTypeTag;
+}
+void * LoggerData::getPayload() {
+	return _dataPayload;
+}
+
+const string LoggerData::RAW_DATA = "RD";
+const string LoggerData::SLICE_DATA = "SD";
+const string LoggerData::IS_ENTRAINMENT_ON = "EO";
+const string LoggerData::ENTRAINMENT_FREQ = "EF";
+
+
+// ------------------------------------------------------- 
+// LoggerThread()
+// -------------------------------------------------------
+LoggerThread::LoggerThread() {
+	_logDirPath = "../../LogData/";
+	_fileName = fileDateTimeString(ofGetElapsedTimef());
+}
+LoggerThread::LoggerThread(string logDirPath) {
+	_logDirPath = logDirPath;
+	_fileName = fileDateTimeString(ofGetElapsedTimef());
+}
+/* EmergenceLog::dateTimeString
+ * Returns the current date/time in following format:
+ * 2011.05.26,14.36.58,469
+ */
+string LoggerThread::fileDateTimeString(float ofTime)
+{
+    string output = "";
+    
+    int year = ofGetYear();
+    int month = ofGetMonth();
+    int day = ofGetDay();
+    int hours = ofGetHours();
+    int minutes = ofGetMinutes();
+    int seconds = ofGetSeconds();
+    
+    output = output + ofToString(year) + ".";
+    if (month < 10) output = output + "0";
+    output = output + ofToString(month) + ".";
+    if (day < 10) output = output + "0";
+    output = output + ofToString(day) + ", ";
+    if (hours < 10) output = output + "0";
+    output = output + ofToString(hours) + ".";
+    if (minutes < 10) output = output + "0";
+    output = output + ofToString(minutes) + ".";
+    if (seconds < 10) output = output + "0";
+    output = output + ofToString(seconds) + ", ";
+    output = output + ofToString(ofTime, 3);
+    
+    return output;
+}
+void LoggerThread::addData(LoggerData data) {
+	if (isThreadRunning()) lock();
+	_loggerQueue.push(data);
+	if (isThreadRunning()) unlock();
+}
+
+
+void LoggerThread::write(LoggerData data) {
+	ofDirectory dir(_logDirPath);
+	dir.create(true);
+	//_mkdir( _logDirPath.c_str() );//, S_IRWXU | S_IRWXG | S_IRWXO);
+
+    string fileName = _logDirPath + _fileName;
+    
+    ofstream mFile;
+    mFile.open(fileName.c_str(), ios::out | ios::app);
+	mFile.precision(3);
+	mFile << fixed << data.getTimeStamp();
+	mFile << ",";
+	mFile << data.getTypeTag();
+	mFile << ",";
+
+	if (isThreadRunning()) lock();
+
+	if (data.getTypeTag().compare(LoggerData::RAW_DATA) == 0) {
+		// write raw data
+		mFile.precision(3);
+		float * temp = (float *) data.getPayload();
+		for (int i=0; i<ZeoParser::RAW_DATA_LEN; i++) {
+			mFile << fixed << temp[i] << ",";
+		}
+	} else if (data.getTypeTag().compare(LoggerData::SLICE_DATA) == 0){
+		// write zeo slice data
+		ZeoSlice * temp = (ZeoSlice *) data.getPayload();
+		mFile << temp->number << ","; // packet number
+		mFile << temp->time << ","; // zeo time
+		for (int i=0; i< ZeoParser::NUM_FREQS; i++) {
+			mFile << temp->power[i] << ","; // Power in different freq bands
+		}
+		mFile << temp->impendance << ","; // Impedance
+		mFile << temp->sqi << ","; // signal quality index
+		mFile << temp->signal << ","; // signal quality (0/1)
+		mFile << temp->stage << ","; // sleep stage
+		mFile << temp->version << ","; // zeo packet version
+	} else if (data.getTypeTag().compare(LoggerData::IS_ENTRAINMENT_ON) == 0){
+		// write entrainment "raw" data
+		bool * temp = (bool *) data.getPayload();
+		mFile << ((*temp) ? "1":"0") << ","; 
+	} else if (data.getTypeTag().compare(LoggerData::ENTRAINMENT_FREQ) == 0){
+		// write entrainment frequency
+		mFile.precision(3);
+		float * temp = (float *) data.getPayload();
+		mFile << fixed << (*temp) << ",";
+	} else {
+		fprintf(stderr, "LoggerThread::write() dataTypeTag %s unknown\n", data.getTypeTag());
+	}
+
+	if (isThreadRunning()) unlock();
+
+    mFile << "\n";
+    mFile.close();
+}
+
+void LoggerThread::threadedFunction() {
+	while (isThreadRunning()) {
+		lock();
+
+		if (!_loggerQueue.empty()) {
+			write(_loggerQueue.front());
+			_loggerQueue.pop();
+		}
+		unlock();
+		ofSleepMillis(1);
+	}
 }

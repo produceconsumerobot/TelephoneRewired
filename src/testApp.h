@@ -2,26 +2,18 @@
 
 #include "ofMain.h"
 #include "ofxMidi.h"
+
+#define DEBUG_PRINT
+
 #include "telephoneRewired.h"
-#include "zeo.h"
-
-class MyThread : public ofThread {
-	void threadedFunction() {
-		while (isThreadRunning()) {
-			//printf("2 - %s\n", ofGetTimestampString().c_str());
-			ofSleepMillis(10);
-		}
-	}
-};
-
-
+#include "zeoParser.h"
+#include "ofxOscilloscope.h"
 
 class testApp : public ofBaseApp{
 	public:
 
 		FreqOutThread freqOutThread;
-		MyThread thread;
-		
+		int counter;
 		int midiChannel;
 		int midiId;
 		int midiValue;
@@ -32,7 +24,25 @@ class testApp : public ofBaseApp{
 		int absMaxOutDelay;
 		float absAveOutDelay;
 		float prevFreq;
-		ZeoParser	zeo;
+		ofImage stimuli[3];
+
+		bool showStimuli;
+		bool showOscilloscope;
+		bool showScreenEntrainment;
+
+		//ZeoParser zeo;
+		ZeoReaderThread zeoThread;
+		LoggerThread logger;
+		
+		
+		ofxMultiScope scopeWin;
+
+		// Oscilloscope data arrays	
+		std::vector<std::vector<float>>  rawData;
+		std::vector<std::vector<float>>  powerData;
+		std::vector<std::vector<float>>  filtData;
+		std::vector<std::vector<float>>	 sliceData;
+		std::vector<std::vector<float>>	 entrainmentFreqData;
 
 		void setup();
 		void update();
@@ -48,4 +58,11 @@ class testApp : public ofBaseApp{
 		void windowResized(int w, int h);
 		void dragEvent(ofDragInfo dragInfo);
 		void gotMessage(ofMessage msg);
+
+		void SetupOscilloscopes();
+		void newZeoSliceData(bool & ready);
+		void newZeoRawData(bool & ready);
+		void entrainmentOutChange(bool & output);
+		void entrainmentFreqChange(float & freq);
+		void plotEntrainmentFreqData(float freq);
 };

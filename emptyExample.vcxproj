@@ -58,7 +58,7 @@
       <PrecompiledHeader />
       <WarningLevel>Level3</WarningLevel>
       <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
-      <AdditionalIncludeDirectories>..\..\..\addons\ofxMidi\src\desktop\rtmidi;..\..\..\addons\ofxMidi\src;%(AdditionalIncludeDirectories);src;src\zeo;</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\..\..\addons\zeoParser\src;..\..\..\addons\ofxOscilloscope\src;..\..\..\addons\ofxMidi\src\desktop\rtmidi;..\..\..\addons\ofxMidi\src;%(AdditionalIncludeDirectories);src;</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <OutputFile>$(OutDir)$(TargetName)$(TargetExt)</OutputFile>
@@ -81,7 +81,7 @@
       <PrecompiledHeader />
       <WarningLevel>Level3</WarningLevel>
       <DebugInformationFormat />
-      <AdditionalIncludeDirectories>..\..\..\addons\ofxMidi\src\desktop\rtmidi;..\..\..\addons\ofxMidi\src;%(AdditionalIncludeDirectories);src;src\zeo;</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\..\..\addons\zeoParser\src;..\..\..\addons\ofxOscilloscope\src;..\..\..\addons\ofxMidi\src\desktop\rtmidi;..\..\..\addons\ofxMidi\src;%(AdditionalIncludeDirectories);src;</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <IgnoreAllDefaultLibraries>false</IgnoreAllDefaultLibraries>
@@ -107,10 +107,11 @@
     <ClCompile Include="..\..\..\addons\ofxMidi\src\ofxMidiIn.cpp" />
     <ClCompile Include="..\..\..\addons\ofxMidi\src\ofxMidiMessage.cpp" />
     <ClCompile Include="..\..\..\addons\ofxMidi\src\ofxMidiOut.cpp" />
+    <ClCompile Include="..\..\..\addons\ofxOscilloscope\src\ofxOscilloscope.cpp" />
+    <ClCompile Include="..\..\..\addons\zeoParser\src\zeoParser.cpp" />
     <ClCompile Include="src\main.cpp" />
     <ClCompile Include="src\telephoneRewired.cpp" />
     <ClCompile Include="src\testApp.cpp" />
-    <ClCompile Include="src\zeo\zeo.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\..\addons\ofxMidi\src\desktop\ofxRtMidiIn.h" />
@@ -124,9 +125,10 @@
     <ClInclude Include="..\..\..\addons\ofxMidi\src\ofxMidiMessage.h" />
     <ClInclude Include="..\..\..\addons\ofxMidi\src\ofxMidiOut.h" />
     <ClInclude Include="..\..\..\addons\ofxMidi\src\ofxMidiTypes.h" />
+    <ClInclude Include="..\..\..\addons\ofxOscilloscope\src\ofxOscilloscope.h" />
+    <ClInclude Include="..\..\..\addons\zeoParser\src\zeoParser.h" />
     <ClInclude Include="src\telephoneRewired.h" />
     <ClInclude Include="src\testApp.h" />
-    <ClInclude Include="src\zeo\zeo.h" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\..\libs\openFrameworksCompiled\project\vs2010\openframeworksLib.vcxproj">
