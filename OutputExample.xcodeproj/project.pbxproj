@@ -8,9 +8,9 @@
 
 /* Begin PBXBuildFile section */
 		270A248D141220590073405C /* CoreMIDI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 270A248C141220590073405C /* CoreMIDI.framework */; };
+		2782D20A169F398300D4005C /* zeoParser.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2782D1FC169F398200D4005C /* zeoParser.cpp */; };
+		2782D221169F39BE00D4005C /* ofxOscilloscope.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2782D21D169F39BE00D4005C /* ofxOscilloscope.cpp */; };
 		27A3B1B7168588D2000703FB /* telephoneRewired.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 27A3B1B0168588D2000703FB /* telephoneRewired.cpp */; };
-		27A3B1B8168588D2000703FB /* zeo.c in Sources */ = {isa = PBXBuildFile; fileRef = 27A3B1B4168588D2000703FB /* zeo.c */; };
-		27A3B1B9168588D2000703FB /* zeo.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 27A3B1B5168588D2000703FB /* zeo.cpp */; };
 		3022ECC51572E19F0053CD2B /* ofxRtMidiIn.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 3022ECBC1572E19F0053CD2B /* ofxRtMidiIn.cpp */; };
 		3022ECC61572E19F0053CD2B /* ofxRtMidiOut.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 3022ECBE1572E19F0053CD2B /* ofxRtMidiOut.cpp */; };
 		3022ECC71572E19F0053CD2B /* RtMidi.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 3022ECC31572E19F0053CD2B /* RtMidi.cpp */; };
@@ -69,11 +69,15 @@
 
 /* Begin PBXFileReference section */
 		270A248C141220590073405C /* CoreMIDI.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreMIDI.framework; path = /System/Library/Frameworks/CoreMIDI.framework; sourceTree = "<absolute>"; };
+		2782D1FA169F398200D4005C /* README.md */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = README.md; sourceTree = "<group>"; };
+		2782D1FC169F398200D4005C /* zeoParser.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = zeoParser.cpp; sourceTree = "<group>"; };
+		2782D1FD169F398200D4005C /* zeoParser.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = zeoParser.h; sourceTree = "<group>"; };
+		2782D210169F39BD00D4005C /* verdana.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = verdana.ttf; sourceTree = "<group>"; };
+		2782D21B169F39BE00D4005C /* README.md */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = README.md; sourceTree = "<group>"; };
+		2782D21D169F39BE00D4005C /* ofxOscilloscope.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = ofxOscilloscope.cpp; sourceTree = "<group>"; };
+		2782D21E169F39BE00D4005C /* ofxOscilloscope.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ofxOscilloscope.h; sourceTree = "<group>"; };
 		27A3B1B0168588D2000703FB /* telephoneRewired.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = telephoneRewired.cpp; sourceTree = "<group>"; };
 		27A3B1B1168588D2000703FB /* telephoneRewired.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = telephoneRewired.h; sourceTree = "<group>"; };
-		27A3B1B4168588D2000703FB /* zeo.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = zeo.c; sourceTree = "<group>"; };
-		27A3B1B5168588D2000703FB /* zeo.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = zeo.cpp; sourceTree = "<group>"; };
-		27A3B1B6168588D2000703FB /* zeo.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = zeo.h; sourceTree = "<group>"; };
 		3022ECBC1572E19F0053CD2B /* ofxRtMidiIn.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = ofxRtMidiIn.cpp; sourceTree = "<group>"; };
 		3022ECBD1572E19F0053CD2B /* ofxRtMidiIn.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ofxRtMidiIn.h; sourceTree = "<group>"; };
 		3022ECBE1572E19F0053CD2B /* ofxRtMidiOut.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = ofxRtMidiOut.cpp; sourceTree = "<group>"; };
@@ -150,22 +154,59 @@
 			name = ofxMidi;
 			sourceTree = "<group>";
 		};
-		27A3B1B2168588D2000703FB /* zeo */ = {
+		2782D1F9169F398200D4005C /* zeoParser */ = {
 			isa = PBXGroup;
 			children = (
-				27A3B1B3168588D2000703FB /* old */,
-				27A3B1B5168588D2000703FB /* zeo.cpp */,
-				27A3B1B6168588D2000703FB /* zeo.h */,
+				2782D1FA169F398200D4005C /* README.md */,
+				2782D1FB169F398200D4005C /* src */,
 			);
-			path = zeo;
+			name = zeoParser;
+			path = ../../../addons/zeoParser;
 			sourceTree = "<group>";
 		};
-		27A3B1B3168588D2000703FB /* old */ = {
+		2782D1FB169F398200D4005C /* src */ = {
 			isa = PBXGroup;
 			children = (
-				27A3B1B4168588D2000703FB /* zeo.c */,
+				2782D1FC169F398200D4005C /* zeoParser.cpp */,
+				2782D1FD169F398200D4005C /* zeoParser.h */,
 			);
-			path = old;
+			path = src;
+			sourceTree = "<group>";
+		};
+		2782D20D169F39BD00D4005C /* ofxOscilloscope */ = {
+			isa = PBXGroup;
+			children = (
+				2782D20E169F39BD00D4005C /* bin */,
+				2782D21B169F39BE00D4005C /* README.md */,
+				2782D21C169F39BE00D4005C /* src */,
+			);
+			name = ofxOscilloscope;
+			path = ../../../addons/ofxOscilloscope;
+			sourceTree = "<group>";
+		};
+		2782D20E169F39BD00D4005C /* bin */ = {
+			isa = PBXGroup;
+			children = (
+				2782D20F169F39BD00D4005C /* data */,
+			);
+			path = bin;
+			sourceTree = "<group>";
+		};
+		2782D20F169F39BD00D4005C /* data */ = {
+			isa = PBXGroup;
+			children = (
+				2782D210169F39BD00D4005C /* verdana.ttf */,
+			);
+			path = data;
+			sourceTree = "<group>";
+		};
+		2782D21C169F39BE00D4005C /* src */ = {
+			isa = PBXGroup;
+			children = (
+				2782D21D169F39BE00D4005C /* ofxOscilloscope.cpp */,
+				2782D21E169F39BE00D4005C /* ofxOscilloscope.h */,
+			);
+			path = src;
 			sourceTree = "<group>";
 		};
 		3022ECBB1572E19F0053CD2B /* desktop */ = {
@@ -214,6 +255,8 @@
 		BB4B014C10F69532006C3DED /* addons */ = {
 			isa = PBXGroup;
 			children = (
+				2782D20D169F39BD00D4005C /* ofxOscilloscope */,
+				2782D1F9169F398200D4005C /* zeoParser */,
 				270A243014121F2F0073405C /* ofxMidi */,
 			);
 			name = addons;
@@ -281,7 +324,6 @@
 			children = (
 				27A3B1B0168588D2000703FB /* telephoneRewired.cpp */,
 				27A3B1B1168588D2000703FB /* telephoneRewired.h */,
-				27A3B1B2168588D2000703FB /* zeo */,
 				E4B69E1D0A3A1BDC003C02F2 /* main.cpp */,
 				E4B69E1E0A3A1BDC003C02F2 /* testApp.cpp */,
 				E4B69E1F0A3A1BDC003C02F2 /* testApp.h */,
@@ -393,8 +435,8 @@
 				3022ECC71572E19F0053CD2B /* RtMidi.cpp in Sources */,
 				3022ECCA1572E1AA0053CD2B /* ofxBaseMidi.cpp in Sources */,
 				27A3B1B7168588D2000703FB /* telephoneRewired.cpp in Sources */,
-				27A3B1B8168588D2000703FB /* zeo.c in Sources */,
-				27A3B1B9168588D2000703FB /* zeo.cpp in Sources */,
+				2782D20A169F398300D4005C /* zeoParser.cpp in Sources */,
+				2782D221169F39BE00D4005C /* ofxOscilloscope.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

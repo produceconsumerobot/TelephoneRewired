@@ -281,10 +281,11 @@ void ZeoReaderThread::threadedFunction() {
 			//printf("serial.count=%i\n", count);
 
 			if (count < 0) {
-				fprintf(stderr, "Error reading data!\n");
+				//fprintf(stderr, "Error reading data!\n");
 				//exit();
 			};
 			if (count > 0) {
+                printf("read %i bytes\n", count);
 				available += count;
 
 				int remaining = _zeo.parsePacket(buffer, available, &spliceDataReady, &rawDataReady);

@@ -4,12 +4,14 @@
 void testApp::setup(){
 
 	// **** COMPUTER SPECIFIC VARIABLES **** //
-	string arduinoPort = "\\\\.\\COM28"; // Sean, Windows, Uno
-	//string arduinoPort = "tty.usbmodemfa141"; // Sean, Mac, Arduino Decimila
+	//string arduinoPort = "\\\\.\\COM28"; // Sean, Windows, Uno
+	string arduinoPort = "tty.usbmodemfa141"; // Sean, Mac, Arduino Decimila
 	//string arduinoPort = "/dev/cu.usbserial-A70064Yu"; // Sean, Mac, Arduino Decimila
     //tty.usbmodemfa141
     //cu.usbmodemfa141
-	string zeoPort = "\\\\.\\COM26";
+    string zeoPort = "tty.usbserial"; //Mac 
+	
+    //string zeoPort = "\\\\.\\COM26";
 	// **** END COMPUTER SPECIFIC VARIABLES **** //
 
 
@@ -136,9 +138,9 @@ void testApp::setup(){
 
 	//logger.startThread(true, false);
 
-	stimuli[0].loadImage("data/images/01.jpg");
-	stimuli[1].loadImage("data/images/02.jpg");
-	stimuli[2].loadImage("data/images/03.jpg");
+	//stimuli[0].loadImage("data/images/01.jpg");
+	//stimuli[1].loadImage("data/images/02.jpg");
+	//stimuli[2].loadImage("data/images/03.jpg");
 
 	counter = 0;
 	// **** END GENERAL SETUP **** //
