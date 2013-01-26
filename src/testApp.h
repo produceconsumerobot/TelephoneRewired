@@ -1,48 +1,60 @@
 #pragma once
 
+//#define DEBUG_PRINT
+
 #include "ofMain.h"
 #include "ofxMidi.h"
 
-#define DEBUG_PRINT
-
 #include "telephoneRewired.h"
-#include "zeoParser.h"
+#include "brainTrainment.h"
 #include "ofxOscilloscope.h"
+#include "logger.h"
 
 class testApp : public ofBaseApp{
 	public:
 
 		FreqOutThread freqOutThread;
-		int counter;
+
+		// MIDI variables
 		int midiChannel;
 		int midiId;
 		int midiValue;
 		bool midiMapMode;
 		ofxMidiOut midiout;
-		bool outState;
-		float prevLoopTime;
-		int absMaxOutDelay;
-		float absAveOutDelay;
-		float prevFreq;
-		ofImage stimuli[3];
 
+		// Variables to control output functionality
 		bool showStimuli;
 		bool showOscilloscope;
 		bool showScreenEntrainment;
+		bool showLedEntrainment;
+		bool playMidi;
+		bool logData;
+		bool readEEG;
 
 		//ZeoParser zeo;
 		ZeoReaderThread zeoThread;
-		LoggerThread logger;
-		
-		
-		ofxMultiScope scopeWin;
+		bool printData; // prints zeo data to stdout
 
+		// Data Logger
+		LoggerThread logger;
+		string logDirPath;
+
+		// Oscilloscope
+		ofxMultiScope scopeWin;
+		bool isScopePaused;
 		// Oscilloscope data arrays	
-		std::vector<std::vector<float> >  rawData;
-		std::vector<std::vector<float> >  powerData;
-		std::vector<std::vector<float> >  filtData;
-		std::vector<std::vector<float> >	 sliceData;
-		std::vector<std::vector<float> >	 entrainmentFreqData;
+		std::vector<std::vector<float> >	zeoRawData;
+		std::vector<std::vector<float> >	zeoFiltData;
+		std::vector<std::vector<float> >	zeoPowerData;
+		std::vector<std::vector<float> >	zeoQualityData;
+		std::vector<std::vector<float> >	entrainmentFreqData;
+
+		void SetupOscilloscopes();
+		void newZeoSliceData(bool & ready);
+		void newZeoRawData(bool & ready);
+		void entrainmentOutChange(bool & output);
+		void entrainmentFreqChange(float & freq);
+		void plotEntrainmentFreqData(float freq);
 
 		void setup();
 		void update();
@@ -59,10 +71,6 @@ class testApp : public ofBaseApp{
 		void dragEvent(ofDragInfo dragInfo);
 		void gotMessage(ofMessage msg);
 
-		void SetupOscilloscopes();
-		void newZeoSliceData(bool & ready);
-		void newZeoRawData(bool & ready);
-		void entrainmentOutChange(bool & output);
-		void entrainmentFreqChange(float & freq);
-		void plotEntrainmentFreqData(float freq);
 };
+
+

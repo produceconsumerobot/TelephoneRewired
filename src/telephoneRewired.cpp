@@ -2,6 +2,7 @@
 //  telephoneRewired.h
 //
 //  Created by Sean Montgomery on 12/18/12.
+//  http://produceconsumerobot.com/
 //
 //  This work is licensed under the Creative Commons 
 //  Attribution-ShareAlike 3.0 Unported License. 
@@ -14,23 +15,79 @@
 * FreqOutThread
 * Thread to handle frequency modulation of light and sound
 *-------------------------------------------------*/
+
 FreqOutThread::FreqOutThread() {
+#ifdef DEBUG_PRINT 
+	printf("FreqOutThread()\n");
+#endif
 	_output = false;
-	_outputDelay = 0;
+	_outputDelay = 0.0;
 	_nFreqs = 0;
-	_freqIterator = 0;
-	_currentStartTime = 0.0;
+	_freqIterator = -1;
+	_currentFreqStartTime = ofGetElapsedTimeMillis();
+	_currentOutputStartTime = ofGetElapsedTimeMillis();
 	_sendMidi = true;
-	_printOut = false;
+	_printOut = OUTPUT_DELAYS;
+
+	_midiChannel = 0;
+	_midiId  = 0;
+	_midiValue = 0;
+	_midiout = NULL;
+
+	_absMaxOutDelay = 0;
+	_absAveOutDelay = 0;
+	_aveDecay = 100;
+
+	_bSetupArduino = false;
+	_flashScreen = false;
+
+	// Testing rollover of ElapsedTime
+	debuggingRollover = false;
+	if (debuggingRollover) {
+		startRolloverTest = -500;
+		timeRolloverTest = -2000;
+		_currentOutputStartTime = _testTimeRollOver();
+	}
+
+	//const int nHighPins = 1;
+	//const int highPins[nHighPins] = {12};
+	//vector<int> _highPins(highPins, highPins + nHighPins);
 }
 
+// Destructor
 FreqOutThread::~FreqOutThread() {
-	delete[] _freqCycle;
-	_arduino.disconnect();
-	unlock();
+#ifdef DEBUG_PRINT 
+	printf("~FreqOutThread()\n");
+#endif
+
+	//if (isThreadRunning()) lock();
+	//lock();
+
+
+
+	//unlock();
+
+	// Stop the thread if it's still running
+	if (isThreadRunning()) {
+		//stopThread();
+		waitForThread(true); // Stops thread and waits for thread to be cleaned up
+	}
+
+	_nFreqs = 0;
+
+	// Turn all the outputs off
+	turnOutputsOff();
+
+	// Disconnect the arduino
+	if (_bSetupArduino) 
+		_arduino.disconnect();
+
+	_bSetupArduino = false;
 }
 
 void FreqOutThread::setupMidi(ofxMidiOut * midiout, int midiChannel, int midiId, int midiValue) {
+	//lock();
+
 	_midiChannel = midiChannel;
 	_midiId  = midiId;
 	_midiValue = midiValue;
@@ -40,32 +97,161 @@ void FreqOutThread::setupMidi(ofxMidiOut * midiout, int midiChannel, int midiId,
 	// Set up MIDI port
 	//_midiout.listPorts();
 	//_midiout.openPort(0);
+
+	//unlock();
 }
 
-void FreqOutThread::setupLights(string device, int baud, int ledPin, int ledBrightness) {
 
-	_ledPin = ledPin;
-	_ledBrightness = ledBrightness;
+// Sends MIDI off signal and unsets midiout
+void FreqOutThread::unsetMidi() {
+	//lock();
+
+	if (_sendMidi) {
+		// Send midi
+		if (_midiout != NULL) {
+			_midiout->sendNoteOff(_midiChannel, _midiId, _midiValue );
+		}
+	}
+
+	_midiChannel = 0;
+	_midiId  = 0;
+	_midiValue = 0;
+	_midiout = NULL;
+
+	//unlock();
+}
+
+// toggleMidiOut
+// Turns on/off the Midi Ouput
+void FreqOutThread::toggleMidiOut() {
+	//lock(); // Lock the thread
+
+	_sendMidi = !_sendMidi;
+
+	//unlock(); // Unlock the thread
+}
+
+void FreqOutThread::setFreqCycle(std::vector< freqInterval > freqs) {
+	//lock();
+
+	_freqCycle = freqs;
+	_nFreqs = _freqCycle.size();
+
+	// Send a callback that frequency has changed
+	float f = _getCurrentFreq();
+	ofNotifyEvent(freqChanged, f, this);
+
+	//unlock();
+}
+
+// setFreqCycle
+// Sets the entrainment freq cycle
+void FreqOutThread::setFreqCycle(const int nFreqs, const float freqs[][2]) {
+#ifdef DEBUG_PRINT 
+	printf("setFreqCycle()\n");
+#endif
+	//lock();
+
+	_nFreqs = nFreqs;
+	_freqCycle.resize(_nFreqs);
+
+	for (int i=0; i<_nFreqs; i++) {
+		_freqCycle.at(i).freq = freqs[i][0];
+		_freqCycle.at(i).duration = freqs[i][1];
+	}
+
+	_freqIterator = 0;
+
+	// Send a callback that frequency has changed
+	float f = _getCurrentFreq();
+	ofNotifyEvent(freqChanged, f, this);
+	
+	//unlock();
+}
+
+// printFreqCycle
+// prints the current entrainment freq cycle
+void FreqOutThread::printFreqCycle() {
+#ifdef DEBUG_PRINT 
+	printf("printFreqCycle()\n");
+#endif
+
+	//lock();
+
+	if (_freqCycle.size() > 0) {
+		int counter = 0;
+		printf("Entrainment Freq Cycle:\n");
+		for (auto it = _freqCycle.cbegin(); it != _freqCycle.cend(); ++it) {
+			counter ++;
+			if (counter < 100) printf(" "); // align printing
+			if (counter < 10) printf(" ");  // align printing
+			printf("%i, ", counter);
+			if (it->freq < 10) printf(" ");  // align printing			
+			if (it->freq < 100) printf(" ");  // align printing
+			printf("%f, ", it->freq);
+			if (it->duration < 100) printf(" "); // align printing
+			if (it->duration < 10) printf(" ");  // align printing
+			printf("%f\n", it->duration);
+		}
+	} else {
+		printf("No Freq Cycle set\n");
+	}
+
+	//unlock();
+}
+
+// setupLights
+// Sets up the light outputs
+void FreqOutThread::setupLights(string device, int baud, std::vector<int> ledPins, std::vector<int> ledPWMs) {
+#ifdef DEBUG_PRINT 
+	printf("setupLights()\n");
+#endif
+
+	//lock();
+
+	_ledPins = ledPins;
+	_ledPWMs = ledPWMs;
 
 	// Set up Arduino
-	serial.enumerateDevices();
-	//serial.listDevices();
-	//serial.setup("\\\\.\\COM24", 57600);
-
-	//_arduino.connect("/dev/tty.usbmodemfd121", 57600);
+	//_serial.enumerateDevices();
 	_arduino.connect(device, baud);
-	//_arduino.connect("COM24", 115200);
-	// listen for EInitialized notification. this indicates that
-	// the arduino is ready to receive commands and it is safe to
-	// call setupArduino()
-	//ofAddListener(_arduino.EInitialized, this, &FreqOutThread::setupArduino);
 	_bSetupArduino	= false;	// flag so we setup arduino when its ready, you don't need to touch this :)
 	while(!_arduino.isArduinoReady());
 	setupArduino(_arduino.getMajorFirmwareVersion());
+
+	//unlock();
 }
 
+// setupLights
+// Sets up the light outputs
+void FreqOutThread::setupLights(string device, int baud, std::vector<int> ledPins) {
+#ifdef DEBUG_PRINT 
+	printf("setupLights()\n");
+#endif
+
+	//lock();
+
+	_ledPins = ledPins;
+	//_ledPWMs = ledPWMs;
+
+	// Set up Arduino
+	//_serial.enumerateDevices();
+	_arduino.connect(device, baud);
+	_bSetupArduino	= false;	// flag so we setup arduino when its ready, you don't need to touch this :)
+	while(!_arduino.isArduinoReady());
+	setupArduino(_arduino.getMajorFirmwareVersion());
+	
+	//unlock();
+}
+
+// setupArduino
+// Sets up the Arduino
 void FreqOutThread::setupArduino(const int & version) {
-	if (_printOut) printf("setupArduino\n");
+#ifdef DEBUG_PRINT 
+	printf("setupArduino\n");
+#endif
+
+	//lock();
 
 	// remove listener because we don't need it anymore
 	ofRemoveListener(_arduino.EInitialized, this, &FreqOutThread::setupArduino);
@@ -76,177 +262,388 @@ void FreqOutThread::setupArduino(const int & version) {
 	// print firmware name and version to the console
 	cout << _arduino.getFirmwareName() << endl; 
 	cout << "firmata v" << _arduino.getMajorFirmwareVersion() << "." << _arduino.getMinorFirmwareVersion() << endl;
-	// set pin D13 as digital output
-	_arduino.sendDigitalPinMode(11, ARD_OUTPUT);
-    _arduino.update();
-	_arduino.sendDigitalPinMode(10, ARD_OUTPUT);
-    _arduino.update();
-	_arduino.sendDigitalPinMode(9, ARD_OUTPUT);
-    _arduino.update();
-    _arduino.sendDigitalPinMode(12, ARD_OUTPUT);
-    _arduino.update();
-    _arduino.sendDigitalPinMode(13, ARD_OUTPUT);
-    _arduino.update();
-    //_arduino.sendDigital(12, ARD_LOW);
-    //_arduino.sendDigital(12, ARD_HIGH);
-    //_arduino.update();
-    //_arduino.sendDigital(13, ARD_LOW);
-    //_arduino.sendDigital(13, ARD_HIGH);
-    //_arduino.update();
-	//_arduino.sendDigitalPinMode(11, ARD_PWM);
-}
 
-void FreqOutThread::SetFreqCycle(int nFreqs, float freqs[][2]) {
-
-	_nFreqs = nFreqs;
-
-	_freqCycle = new freqInterval [_nFreqs];
-
-	//_freqCycle = ( freqInterval * ) malloc( _nFreqs * sizeof( freqInterval ) );
-
-	for (int i=0; i<_nFreqs; i++) {
-		_freqCycle[i].freq = freqs[i][0];
-		_freqCycle[i].duration = freqs[i][1];
+	for (int i=0; i<_ledPins.size(); i++) {
+		if (i < _ledPWMs.size()) {
+			// Setup pin for PWM
+			_arduino.sendDigitalPinMode(_ledPins.at(i), ARD_PWM);
+			_arduino.update();
+		} else {
+			// Setup pin for digital out
+			_arduino.sendDigitalPinMode(_ledPins.at(i), ARD_OUTPUT);
+			_arduino.update();
+		}
 	}
 
-	_freqIterator = 0;
+	// Setup pins to be constantly high
+	_arduino.sendDigitalPinMode(12, ARD_OUTPUT);
+	_arduino.update();
+	_arduino.sendDigital(12, ARD_HIGH);
+	_arduino.update();
+
+	// Setup pins to be constantly low
+	_arduino.sendDigitalPinMode(8, ARD_OUTPUT);
+	_arduino.update();
+	_arduino.sendDigital(8, ARD_LOW);
+	_arduino.update();
+
+	//unlock();
 }
 
-float FreqOutThread::GetCurrentFreq() {
-	if ((_nFreqs > 0) && (_freqIterator < _nFreqs)) {
-		return _freqCycle[_freqIterator].freq;
+// turnOnScreenFlashing
+// Turns on screen flashing entrainment
+void FreqOutThread::turnOnScreenFlashing() {
+	_flashScreen = true;
+}
+
+// GetCurrentFreq
+// Gets the current entrainment frequency
+float FreqOutThread::_getCurrentFreq() {
+
+	bool t1 = isCurrentThread();
+	bool t2 = isMainThread();
+	string t3 = getThreadName();
+	int t4 = getThreadId();
+
+	//bool u1 = getCurrentThread()->isCurrentThread();
+	//bool u2 = getCurrentThread()->isMainThread();
+	//string u3 = getCurrentThread()->getThreadName();
+	//int u4 = getCurrentThread()->getThreadId();
+
+	if ((_nFreqs > 0) && (_freqIterator >= 0) && (_freqIterator < _freqCycle.size())) {
+		return _freqCycle.at(_freqIterator).freq;
 	} else {
 		return -1;
 	}
+
 }
 
-float FreqOutThread::GetCurrentDuration() {
-	if ((_nFreqs > 0) && (_freqIterator < _nFreqs)) {
-		return _freqCycle[_freqIterator].duration;
+// GetCurrentFreq
+// Gets the current entrainment frequency
+// Public function with blocking
+float FreqOutThread::getCurrentFreq() {
+	//lock();
+	return _getCurrentFreq();
+	//unlock();
+}
+
+// GetCurrentDuration
+// Gets the duration of the current frequency
+float FreqOutThread::_getCurrentDuration() {
+
+	if ((_nFreqs > 0) && (_freqIterator >= 0) && (_freqIterator < _freqCycle.size())) {
+		return _freqCycle.at(_freqIterator).duration;
 	} else {
 		return -1;
 	}
-	return _freqCycle[_freqIterator].duration;
+
 }
 
+// GetCurrentDuration
+// Gets the duration of the current frequency
+float FreqOutThread::getCurrentDuration() {
+	//lock();
+
+	return _getCurrentDuration();
+
+	//unlock();
+}
+
+// getCurrentOutDelay
+// Gets the current delay interval for entrainment
 int FreqOutThread::getCurrentOutDelay() {
 	//lock();
+
 	return _outputDelay;
+
 	//unlock();
 }
 
+// getCurrentOutState
+// Gets the current boolean state of the output
 bool FreqOutThread::getCurrentOutState() {
 	//lock();
+
 	return _output;
+
 	//unlock();
 }
 
-void FreqOutThread::toggleMidiOut() {
-	lock(); // Lock the thread
-	_sendMidi = !_sendMidi;
-	unlock(); // Unlock the thread
+void FreqOutThread::turnOutputsOn() {
+	//lock();
+
+	_output = !_output; // Flip the output
+
+	if (_sendMidi) {
+		// Send midi
+		if (_midiout != NULL) {
+			_midiout->sendNoteOn(_midiChannel, _midiId, _midiValue );
+		}
+	}				
+	if (_bSetupArduino) {
+
+		// Send arduino output
+		for (int i=0; i<_ledPins.size(); i++) {
+			if (i < _ledPWMs.size()) {
+				_arduino.sendPwm(_ledPins.at(i), _ledPWMs.at(i));
+				_arduino.update();
+			} else {
+				if (_printOut & LED_STATES) printf("LED[%i]=HIGH\n",i);
+				_arduino.sendDigital(_ledPins.at(i), ARD_HIGH);
+				_arduino.update();
+			}
+		}
+	}
+	if (_flashScreen) {
+		ofBackground(255,255,255);
+	}
+
+	if (_nFreqs > 0) { // If we're not deconstructing
+		//Send callback to notify output has changed
+		bool b = true;
+		ofNotifyEvent(outputChanged, b, this);
+	}
+
+	//unlock();
+}
+
+void FreqOutThread::turnOutputsOff() {
+
+	//if (isThreadRunning()) lock();
+
+	_output = !_output; // Flip the output
+
+	if (_sendMidi) {
+		// Send midi
+		if (_midiout != NULL) {
+			_midiout->sendNoteOff(_midiChannel, _midiId, _midiValue );
+		}
+	}
+	if (_bSetupArduino) {
+
+		// Send arduino output
+
+		for (int i=0; i<_ledPins.size(); i++) {
+			if (i < _ledPWMs.size()) {
+				_arduino.sendPwm(_ledPins.at(i), 0);
+				_arduino.update();
+			} else {
+				if (_printOut & LED_STATES) printf("LED[%i]=LOW\n",i);
+				_arduino.sendDigital(_ledPins.at(i), ARD_LOW);
+				_arduino.update();
+			}
+		}
+	}
+	if (_flashScreen) {
+		ofBackground(0,0,0);
+	}
+
+	//Send callback to notify output has changed
+	if (_nFreqs > 0) { // If we're not deconstructing
+		bool b = false;
+		ofNotifyEvent(outputChanged, b, this);
+	}
+
+	//unlock();
+}
+
+
+// update
+// Updates the outputs, check the current frequency duration 
+// and iterates through the frequency cycle
+void FreqOutThread::update() {
+#ifdef DEBUG_PRINT 
+	printf("update()\n");
+#endif
+	if (_getCurrentDuration() > -1) {
+
+		unsigned long long startTime;
+		
+		if (debuggingRollover) { // If we're debugging rollover
+			startTime = _testTimeRollOver(); // Used to test ElapseTime rollover
+		} else {
+			startTime = ofGetElapsedTimeMillis();  // Used to calculate loop lag
+		}
+
+		float startTimeF = (float) startTime;
+		float _currentOutputStartTimeF = (float) _currentOutputStartTime;
+
+		// Check for rollover of ofGetElapsedTime
+		if ((startTimeF - _currentOutputStartTimeF) < 0) {
+			//debugOfGetElapsedTimef();
+
+			if (debuggingRollover) {
+				startRolloverTest = timeRolloverTest;
+				startTime = _testTimeRollOver();
+			} else {
+				void ofResetElapsedTimeCounter();
+				startTime = ofGetElapsedTimeMillis();
+			}
+
+			_currentOutputStartTime = startTime;
+			_currentFreqStartTime = startTime;
+		}
+
+		if ((startTime - _currentOutputStartTime) >= (_outputDelay * 1000)) {
+			float outDelay = _outputDelay - ((startTime - _currentOutputStartTime) / 1000.);
+			float absOutDelay = abs(outDelay);
+			_absMaxOutDelay = max(absOutDelay, _absMaxOutDelay);
+			_absAveOutDelay = (_absAveOutDelay*(_aveDecay-1.) + absOutDelay)/_aveDecay;
+			if (_printOut & OUTPUT_DELAYS) cout << fixed << setprecision(4) << "absMax: " << _absMaxOutDelay << ", absAve: " << _absAveOutDelay << ", Delay: " << outDelay << "\n" ;
+				//printf("absMax: %.3f, absAve: %.3f, Delay: %.3f\n", _absMaxOutDelay, _absAveOutDelay, outDelay);
+
+			_currentOutputStartTime = startTime;
+
+			if (_output) {
+				turnOutputsOff();
+			} else {
+				turnOutputsOn();
+			}
+
+			// If we've gone over the current duration
+			if ((startTime - _currentFreqStartTime) >= (_getCurrentDuration() * 1000)) {
+				_freqIterator = ( _freqIterator + 1 ) % _nFreqs; // iterate to the next frequency and rollover if at the end
+				_currentFreqStartTime = startTime; // Reset the timer
+
+				// Send a callback that frequency has changed
+				float f = _getCurrentFreq();
+				ofNotifyEvent(freqChanged, f, this);
+			}
+
+			_outputDelay = (1. / _getCurrentFreq() / 2.); // set the output delay to 1/2 period
+
+			//int loopTime = (int) (1000. * (ofGetElapsedTimef() - startTime));
+
+			if (_printOut & LOOP_DELAYS) {
+				cout << fixed << setprecision(4) << "out: Freq=" << _getCurrentFreq() << ", Delay=" << (unsigned long)(_outputDelay*1000) << ", " 
+				<< (_output?"true":"false") << " - " << ofGetElapsedTimeMillis() << "\n";
+				//printf("out: Freq=%f, Delay=%f, %s - %f\n", _getCurrentFreq(), _outputDelay, _output?"true":"false", ofGetElapsedTimef());
+			}
+			if (_printOut & LOOP_DELAYS) {
+				cout << fixed << setprecision(4) << "start=" << startTime << ", outputStart=" 
+					<< _currentOutputStartTime << ", delay=" << (unsigned long)(_outputDelay*1000) << "\n";
+				//printf("startTime=%f, outputStartTime=%f, _outputDelay=%f\n", startTime, _currentOutputStartTime, _outputDelay);
+			}
+
+		} else { 
+			if (_printOut & LOOP_TIMES) {
+				cout << fixed << setprecision(4) << "start=" << startTime << ", outStart=" 
+					<< _currentOutputStartTime << ", delay=" << (unsigned long)(_outputDelay*1000) << "\n";
+				//printf("startTime=%f, outputStartTime=%f, _outputDelay=%f\n", startTime, _currentOutputStartTime, _outputDelay);
+			}
+		}
+	} else {
+		if (_printOut & LOOP_TIMES) printf("Duration = -1\n");
+	}
 }
 
 void FreqOutThread::threadedFunction() {
-	_output = false;
-
 	while (isThreadRunning()) {
+		lock();
+		update();
+		unlock();
 
-		if (GetCurrentDuration() > -1) {
-
-			lock(); // Lock the thread
-
-			float startTime = ofGetElapsedTimef();  // Used to calculate loop lag
-
-			//printf("start - %f\n", ofGetElapsedTimef());
-
-			if (_output) {
-
-				if (_sendMidi) {
-					// Send midi
-					_midiout->sendNoteOn(_midiChannel, _midiId, _midiValue );
-				}
-				if (_bSetupArduino) {
-
-					// Send arduino output
-
-					_arduino.sendDigital(9, ARD_LOW);
-                    _arduino.update();
-                    _arduino.sendDigital(10, ARD_LOW);
-                    _arduino.update();
-                    _arduino.sendDigital(11, ARD_LOW);
-                    _arduino.update();
-                    _arduino.sendDigital(12, ARD_HIGH);
-                    _arduino.update();
-					//_arduino.sendPwm(_ledPin, _ledBrightness);
-				}
-				//ofBackground(255,255,255);
-			} else {
-
-				if (_sendMidi) {
-					// Send midi
-					_midiout->sendNoteOff(_midiChannel, _midiId, _midiValue);
-				}
-				if (_bSetupArduino) {
-
-					// Send arduino output
-
-					_arduino.sendDigital(9, ARD_HIGH);
-                    _arduino.update();
-                    _arduino.sendDigital(10, ARD_HIGH);
-                    _arduino.update();
-                    _arduino.sendDigital(11, ARD_HIGH);
-                    _arduino.update();
-                    _arduino.sendDigital(12, ARD_HIGH);
-                    _arduino.update();
-					//_arduino.sendPwm(_ledPin, 0);
-				}
-				//ofBackground(0,0,0);
-			}
-
-			_arduino.update(); // Need to do this periodically or things get weird
-
-
-			// If we've gone over the current duration
-			if (ofGetElapsedTimef() - _currentStartTime > GetCurrentDuration()) {
-				_freqIterator = ( _freqIterator + 1 ) % _nFreqs; // iterate to the next frequency and rollover if at the end
-				_currentStartTime = ofGetElapsedTimef(); // Reset the timer
-			}
-
-			_outputDelay = (int) (1000. / GetCurrentFreq() / 2.); // set the output delay to 1/2 period
-
-
-			//printf("end   - %f\n", ofGetElapsedTimef());
-			int loopTime = (int) (1000. * (ofGetElapsedTimef() - startTime));
-
-			if (_printOut) printf("out: Freq=%f, Delay=%i, loopTime=%i, %s - %f\n", GetCurrentFreq(), _outputDelay, loopTime, _output?"true":"false", ofGetElapsedTimef());
-
-			_output = !_output; // Flip the output
-			//printf("%i\n", loopTime);
-			int adjustedDelay = _outputDelay - loopTime; // Adjust for loop lag
-
-			unlock(); // Unlock the thread
-
-			ofSleepMillis(adjustedDelay); // wait the set delay
-		} else {
-			if (_printOut) printf("Duration = -1\n");
-		}
-
-
-
+		sleep(1);
+		//ofSleepMillis(10);
 	}
-	if (_printOut) printf("FreqOutThread Finished\n");
-
 }
+
+unsigned long long FreqOutThread::_testTimeRollOver() {
+	timeRolloverTest++;
+	unsigned long long temp = timeRolloverTest - startRolloverTest;
+	//cout << "s:" << startRolloverTest << ", c=" << timeRolloverTest << ", t=" << temp << "\n";
+	return temp; 
+}
+
+void FreqOutThread::debugOfGetElapsedTimef() {
+													 // 18446744027136
+				// Debugging ofGetElapsedTimef() == 18446744069422579320 problem
+
+				Poco::LocalDateTime now1;
+				Poco::Timestamp::TimeVal pts1 = now1.timestamp().epochMicroseconds();
+				cout << "pts1=" << pts1 << "\n";
+				//Poco::Timestamp pts1 = now.timestamp();
+				//typedef Int64 TimeVal;
+				//pts1.epochMicroseconds();
+
+				unsigned long long etu1 = ofGetElapsedTimeMicros();
+				cout << "etu1=" << etu1 << "\n";
+				unsigned long long etm1 = ofGetElapsedTimeMillis();
+				cout << "etm1=" << etm1 << "\n";
+				unsigned long long st1 = ofGetSystemTime();
+				cout << "st1=" << st1 << "\n";
+				unsigned long long stu1 = ofGetSystemTimeMicros();
+				cout << "stu1=" << stu1 << "\n";
+				float etf1 = ofGetElapsedTimef();
+				cout << "etf1=" << etf1 << "\n";
+				int fn1 = ofGetFrameNum();
+				cout << "fn1=" << fn1 << "\n";
+				int h1 = ofGetHours();
+				cout << "h1=" << h1 << "\n";
+				int m1 = ofGetMinutes();
+				cout << "m1=" << m1 << "\n";
+				int mo1 = ofGetMonth();
+				cout << "mo1=" << mo1 << "\n";
+				int s1 = ofGetSeconds();
+				cout << "s1=" << s1 << "\n";
+				string ts1 = ofGetTimestampString();
+				cout << "ts1=" << ts1 << "\n";
+				unsigned int ut1 = ofGetUnixTime();
+				cout << "ut1=" << ut1 << "\n";
+
+				float junk = ofGetElapsedTimef();
+
+				void ofResetElapsedTimeCounter();
+				cout << "\n" << "ofResetElapsedTimeCounter()" << "\n";
+
+				Poco::LocalDateTime now2;
+				Poco::Timestamp::TimeVal pts2 = now2.timestamp().epochMicroseconds();
+				cout << "pts2=" << pts2 << "\n";
+				unsigned long long etu2 = ofGetElapsedTimeMicros();
+				cout << "etu2=" << etu2 << "\n";
+				unsigned long long etm2 = ofGetElapsedTimeMillis();
+				cout << "etm2=" << etm2 << "\n";
+				unsigned long long st2 = ofGetSystemTime();
+				cout << "st2=" << st2 << "\n";
+				unsigned long long stu2 = ofGetSystemTimeMicros();
+				cout << "stu2=" << stu2 << "\n";
+				float etf2 = ofGetElapsedTimef();
+				cout << "etf2=" << etf2 << "\n";
+				int fn2 = ofGetFrameNum();
+				cout << "fn2=" << fn2 << "\n";
+				int h2 = ofGetHours();
+				cout << "h2=" << h2 << "\n";
+				int m2 = ofGetMinutes();
+				cout << "m2=" << m2 << "\n";
+				int mo2 = ofGetMonth();
+				cout << "mo2=" << mo2 << "\n";
+				int s2 = ofGetSeconds();
+				cout << "s2=" << s2 << "\n";
+				string ts2 = ofGetTimestampString();
+				cout << "ts2=" << ts2 << "\n";
+				unsigned int ut2 = ofGetUnixTime();
+				cout << "ut2=" << ut2 << "\n";
+
+				junk = 0;
+}
+
+
+/*-------------------------------------------------
+* ZeoReaderThread
+* Thread to read zeo data and parse into various locations
+*-------------------------------------------------*/
 
 ZeoReaderThread::ZeoReaderThread() {
 	_zeoReady = false;
 }
 
 ZeoReaderThread::~ZeoReaderThread() {
-	if (isThreadRunning()) lock();
+	// Stop the thread if it's still running
+	if (isThreadRunning()) {
+		//stopThread();
+		waitForThread(true); // Stops thread and waits for thread to be cleaned up
+	}
 	_zeoReady = false;
-	if (isThreadRunning()) unlock();
 	_serial.close();
 }
 
@@ -285,7 +682,7 @@ void ZeoReaderThread::threadedFunction() {
 				//exit();
 			};
 			if (count > 0) {
-                printf("read %i bytes\n", count);
+                //printf("read %i bytes\n", count);
 				available += count;
 
 				int remaining = _zeo.parsePacket(buffer, available, &spliceDataReady, &rawDataReady);
@@ -300,237 +697,8 @@ void ZeoReaderThread::threadedFunction() {
 		if (rawDataReady) ofNotifyEvent(newRawData, rawDataReady, this);
 
 		unlock();
-		ofSleepMillis(1);
+		sleep(1);
 	}
 }
 
-// ------------------------------------------------------- 
-// LoggerData()
-// -------------------------------------------------------
-LoggerData::LoggerData() {
-	_ofTimestamp = -1;
-	_dataTypeTag = "-1";
-	_dataPayload = NULL;
-}
-LoggerData::LoggerData(float ofTimestamp, string dataTypeTag) {
-	_ofTimestamp = ofTimestamp;
-	_dataTypeTag = dataTypeTag;
-	_dataPayload = NULL;
-}
-/*
-LoggerData::LoggerData(float ofTimestamp, string dataTypeTag, void * payload) {
-	LoggerData(ofTimestamp, dataTypeTag);
-	if (_dataTypeTag.compare(RAW_DATA)) {
-		float * data = new float[ZeoParser::RAW_DATA_LEN];
-		float * temp = (float *) payload;
-		for (int i=0; i<ZeoParser::RAW_DATA_LEN; i++) {
-			data[i] = temp[i];
-		}
-		_dataPayload = data;
-	} else if (_dataTypeTag.compare(SLICE_DATA)){
-		ZeoSlice * data = new ZeoSlice();
-		ZeoSlice * temp = (ZeoSlice *) payload;
-		temp->copyTo(data);
-		_dataPayload = data;
-	} else if (_dataTypeTag.compare(IS_ENTRAINMENT_ON)){
-		bool * data = new bool;
-		bool * temp = (bool *) payload;
-		*data = temp;
-		_dataPayload = data;
-	} else if (_dataTypeTag.compare(ENTRAINMENT_FREQ)){
-	} else {
-		fprintf(stderr, "LoggerData::~LoggerData() dataTypeTag %s unknown\n", _dataTypeTag);
-	}
-}
-*/
-LoggerData::LoggerData(float ofTimestamp, string dataTypeTag, float rawData[ZeoParser::RAW_DATA_LEN]) {
-	//LoggerData(ofTimestamp, dataTypeTag);
-	_ofTimestamp = ofTimestamp;
-	_dataTypeTag = dataTypeTag;
-	float * data = new float[ZeoParser::RAW_DATA_LEN];
-	for (int i=0; i<ZeoParser::RAW_DATA_LEN; i++) {
-		data[i] = rawData[i];
-	}
-	_dataPayload = data;
-}
-LoggerData::LoggerData(float ofTimestamp, string dataTypeTag, ZeoSlice &zeoSlice) {
-	//LoggerData(ofTimestamp, dataTypeTag);
-	_ofTimestamp = ofTimestamp;
-	_dataTypeTag = dataTypeTag;
-	ZeoSlice * data = new ZeoSlice();
-	zeoSlice.copyTo(data);
-	_dataPayload = data;
-}
-LoggerData::LoggerData(float ofTimestamp, string dataTypeTag, bool boolIn) {
-	//LoggerData(ofTimestamp, dataTypeTag);
-	_ofTimestamp = ofTimestamp;
-	_dataTypeTag = dataTypeTag;
-	bool * data = new bool;
-	*data = boolIn;
-	_dataPayload = data;
-}
-LoggerData::LoggerData(float ofTimestamp, string dataTypeTag, float floatIn) {
-	//LoggerData(ofTimestamp, dataTypeTag);
-	_ofTimestamp = ofTimestamp;
-	_dataTypeTag = dataTypeTag;
-	float * data = new float;
-	*data = floatIn;
-	_dataPayload = data;
-}
-LoggerData::~LoggerData() {
-	if (_dataTypeTag.compare(RAW_DATA) == 0) {
-		//if (_dataPayload != NULL) delete[] (float*) _dataPayload;
-	} else if (_dataTypeTag.compare(SLICE_DATA) == 0){
-		//if (_dataPayload != NULL) delete (ZeoSlice*) _dataPayload;
-		//if (_dataPayload != NULL) delete _dataPayload;
-		ZeoSlice* temp = (ZeoSlice*) _dataPayload;
-		if (_dataPayload != NULL) 
-			//;
-			delete temp;
-	} else if (_dataTypeTag.compare(IS_ENTRAINMENT_ON) == 0){
-		//if (_dataPayload != NULL) delete (bool*) _dataPayload;
-	} else if (_dataTypeTag.compare(ENTRAINMENT_FREQ) == 0){
-		float* temp = (float*) _dataPayload;
-		float value = *temp;
-		//if (_dataPayload != NULL) delete temp;
-	} else if (_dataTypeTag.compare("-1") == 0){
-	} else {
-		fprintf(stderr, "LoggerData::~LoggerData() dataTypeTag %s unknown\n", _dataTypeTag);
-	}
 
-	_ofTimestamp = -1;
-	_dataTypeTag = "-1";
-	_dataPayload = NULL;
-}
-float LoggerData::getTimeStamp() {
-	return _ofTimestamp;
-}
-string LoggerData::getTypeTag() {
-	return _dataTypeTag;
-}
-void * LoggerData::getPayload() {
-	return _dataPayload;
-}
-
-const string LoggerData::RAW_DATA = "RD";
-const string LoggerData::SLICE_DATA = "SD";
-const string LoggerData::IS_ENTRAINMENT_ON = "EO";
-const string LoggerData::ENTRAINMENT_FREQ = "EF";
-
-
-// ------------------------------------------------------- 
-// LoggerThread()
-// -------------------------------------------------------
-LoggerThread::LoggerThread() {
-	_logDirPath = "../../LogData/";
-	_fileName = fileDateTimeString(ofGetElapsedTimef());
-}
-LoggerThread::LoggerThread(string logDirPath) {
-	_logDirPath = logDirPath;
-	_fileName = fileDateTimeString(ofGetElapsedTimef());
-}
-/* EmergenceLog::dateTimeString
- * Returns the current date/time in following format:
- * 2011.05.26,14.36.58,469
- */
-string LoggerThread::fileDateTimeString(float ofTime)
-{
-    string output = "";
-    
-    int year = ofGetYear();
-    int month = ofGetMonth();
-    int day = ofGetDay();
-    int hours = ofGetHours();
-    int minutes = ofGetMinutes();
-    int seconds = ofGetSeconds();
-    
-    output = output + ofToString(year) + ".";
-    if (month < 10) output = output + "0";
-    output = output + ofToString(month) + ".";
-    if (day < 10) output = output + "0";
-    output = output + ofToString(day) + ", ";
-    if (hours < 10) output = output + "0";
-    output = output + ofToString(hours) + ".";
-    if (minutes < 10) output = output + "0";
-    output = output + ofToString(minutes) + ".";
-    if (seconds < 10) output = output + "0";
-    output = output + ofToString(seconds) + ", ";
-    output = output + ofToString(ofTime, 3);
-    
-    return output;
-}
-void LoggerThread::addData(LoggerData data) {
-	if (isThreadRunning()) lock();
-	_loggerQueue.push(data);
-	if (isThreadRunning()) unlock();
-}
-
-
-void LoggerThread::write(LoggerData data) {
-	ofDirectory dir(_logDirPath);
-	dir.create(true);
-	//_mkdir( _logDirPath.c_str() );//, S_IRWXU | S_IRWXG | S_IRWXO);
-
-    string fileName = _logDirPath + _fileName;
-    
-    ofstream mFile;
-    mFile.open(fileName.c_str(), ios::out | ios::app);
-	mFile.precision(3);
-	mFile << fixed << data.getTimeStamp();
-	mFile << ",";
-	mFile << data.getTypeTag();
-	mFile << ",";
-
-	if (isThreadRunning()) lock();
-
-	if (data.getTypeTag().compare(LoggerData::RAW_DATA) == 0) {
-		// write raw data
-		mFile.precision(3);
-		float * temp = (float *) data.getPayload();
-		for (int i=0; i<ZeoParser::RAW_DATA_LEN; i++) {
-			mFile << fixed << temp[i] << ",";
-		}
-	} else if (data.getTypeTag().compare(LoggerData::SLICE_DATA) == 0){
-		// write zeo slice data
-		ZeoSlice * temp = (ZeoSlice *) data.getPayload();
-		mFile << temp->number << ","; // packet number
-		mFile << temp->time << ","; // zeo time
-		for (int i=0; i< ZeoParser::NUM_FREQS; i++) {
-			mFile << temp->power[i] << ","; // Power in different freq bands
-		}
-		mFile << temp->impendance << ","; // Impedance
-		mFile << temp->sqi << ","; // signal quality index
-		mFile << temp->signal << ","; // signal quality (0/1)
-		mFile << temp->stage << ","; // sleep stage
-		mFile << temp->version << ","; // zeo packet version
-	} else if (data.getTypeTag().compare(LoggerData::IS_ENTRAINMENT_ON) == 0){
-		// write entrainment "raw" data
-		bool * temp = (bool *) data.getPayload();
-		mFile << ((*temp) ? "1":"0") << ","; 
-	} else if (data.getTypeTag().compare(LoggerData::ENTRAINMENT_FREQ) == 0){
-		// write entrainment frequency
-		mFile.precision(3);
-		float * temp = (float *) data.getPayload();
-		mFile << fixed << (*temp) << ",";
-	} else {
-		fprintf(stderr, "LoggerThread::write() dataTypeTag %s unknown\n", data.getTypeTag());
-	}
-
-	if (isThreadRunning()) unlock();
-
-    mFile << "\n";
-    mFile.close();
-}
-
-void LoggerThread::threadedFunction() {
-	while (isThreadRunning()) {
-		lock();
-
-		if (!_loggerQueue.empty()) {
-			write(_loggerQueue.front());
-			_loggerQueue.pop();
-		}
-		unlock();
-		ofSleepMillis(1);
-	}
-}
