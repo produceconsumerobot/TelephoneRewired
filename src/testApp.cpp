@@ -6,16 +6,20 @@ void testApp::setup() {
 	// **** COMPUTER SPECIFIC VARIABLES **** //
 
 	// Arduino Port
-	string arduinoPort = "\\\\.\\COM28"; // Sean, Windows, Uno
+	//string arduinoPort = "\\\\.\\COM28"; // Sean, Windows, Uno
 	//string arduinoPort = "tty.usbmodemfa141"; // Sean, Mac, Arduino Decimila
 	//string arduinoPort = "/dev/cu.usbserial-A70064Yu"; // Sean, Mac, Arduino Decimila
     //tty.usbmodemfa141
     //cu.usbmodemfa141
-    //string zeoPort = "tty.usbserial"; //Mac 
+    string arduinoPort = "tty.usbmodem1411"; //Mac
 
 	// Zeo Port
-	string zeoPort = "\\\\.\\COM26";
-
+	//string zeoPort = "\\\\.\\COM26";
+    string zeoPort = "tty.usbserial"; //Mac
+    
+    // Midi Port
+    int midiPort = 0;
+    
 	// Log Directory
 	logDirPath = "../../LogData/";
 
@@ -27,12 +31,12 @@ void testApp::setup() {
 
 	// Variables to control output functionality
 	showStimuli = false;
-	showOscilloscope = false;
-	showScreenEntrainment = true;
-	showLedEntrainment = false;
-	playMidi = false;
+	showOscilloscope = true;
+	showScreenEntrainment = false;
+	showLedEntrainment = true;
+	playMidi = true;
 	logData = true;
-	readEEG = false;
+	readEEG = true;
 
 	//Setup entrainment data listeners
 	ofAddListener(freqOutThread.outputChanged, this, &testApp::entrainmentOutChange);
@@ -52,7 +56,6 @@ void testApp::setup() {
 	//const vector<int> vLedPWMs(ledPWMs, ledPWMs+nLedPins);	
 
 	// MIDI parameters
-	int midiPort = 1;
 	midiChannel = 1;
 	midiId = 60;
 	midiValue = 100;
