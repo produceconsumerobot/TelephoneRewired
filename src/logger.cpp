@@ -195,7 +195,7 @@ void LoggerThread::pop_front() {
 
 		} else if (data.getTypeTag().compare("-1") == 0){
 		} else {
-			fprintf(stderr, "LoggerData::~LoggerData() dataTypeTag %s unknown\n", data.getTypeTag());
+			fprintf(stderr, "LoggerData::~LoggerData() dataTypeTag %s unknown\n", data.getTypeTag().c_str());
 			exit(-1);
 		}
 		_loggerQueue.pop();
@@ -249,7 +249,7 @@ void LoggerThread::log(LoggerData data) {
 		mFile << fixed << (*temp) << ",";
 
 	} else {
-		fprintf(stderr, "LoggerThread::write() dataTypeTag %s unknown\n", data.getTypeTag());
+		fprintf(stderr, "LoggerThread::write() dataTypeTag %s unknown\n", data.getTypeTag().c_str());
 	}
 
     mFile << "\n";

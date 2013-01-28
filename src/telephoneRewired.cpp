@@ -181,7 +181,7 @@ void FreqOutThread::printFreqCycle() {
 	if (_freqCycle.size() > 0) {
 		int counter = 0;
 		printf("Entrainment Freq Cycle:\n");
-		for (auto it = _freqCycle.cbegin(); it != _freqCycle.cend(); ++it) {
+		for (auto it = _freqCycle.begin(); it != _freqCycle.end(); ++it) {
 			counter ++;
 			if (counter < 100) printf(" "); // align printing
 			if (counter < 10) printf(" ");  // align printing

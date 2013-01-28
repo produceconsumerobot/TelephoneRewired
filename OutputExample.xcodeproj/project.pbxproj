@@ -19,6 +19,7 @@
 		306D312D14F09AFE0009AEF1 /* ofxMidiMessage.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 306D312214F09AFE0009AEF1 /* ofxMidiMessage.cpp */; };
 		306D312E14F09AFE0009AEF1 /* ofxMidiOut.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 306D312414F09AFE0009AEF1 /* ofxMidiOut.cpp */; };
 		BBAB23CB13894F3D00AA2426 /* GLUT.framework in CopyFiles */ = {isa = PBXBuildFile; fileRef = BBAB23BE13894E4700AA2426 /* GLUT.framework */; };
+		CE9E317516B7321900370006 /* logger.cpp in Sources */ = {isa = PBXBuildFile; fileRef = CE9E317316B7321900370006 /* logger.cpp */; };
 		E4328149138ABC9F0047C5CB /* openFrameworksDebug.a in Frameworks */ = {isa = PBXBuildFile; fileRef = E4328148138ABC890047C5CB /* openFrameworksDebug.a */; };
 		E45BE97B0E8CC7DD009D7055 /* AGL.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = E45BE9710E8CC7DD009D7055 /* AGL.framework */; };
 		E45BE97C0E8CC7DD009D7055 /* ApplicationServices.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = E45BE9720E8CC7DD009D7055 /* ApplicationServices.framework */; };
@@ -98,6 +99,9 @@
 		306D312514F09AFE0009AEF1 /* ofxMidiOut.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ofxMidiOut.h; sourceTree = "<group>"; };
 		306D312614F09AFE0009AEF1 /* ofxMidiTypes.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ofxMidiTypes.h; sourceTree = "<group>"; };
 		BBAB23BE13894E4700AA2426 /* GLUT.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = GLUT.framework; path = ../../../libs/glut/lib/osx/GLUT.framework; sourceTree = "<group>"; };
+		CE9E317216B7321900370006 /* brainTrainment.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = brainTrainment.h; sourceTree = "<group>"; };
+		CE9E317316B7321900370006 /* logger.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = logger.cpp; sourceTree = "<group>"; };
+		CE9E317416B7321900370006 /* logger.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = logger.h; sourceTree = "<group>"; };
 		E4328143138ABC890047C5CB /* openFrameworksLib.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = openFrameworksLib.xcodeproj; path = ../../../libs/openFrameworksCompiled/project/osx/openFrameworksLib.xcodeproj; sourceTree = SOURCE_ROOT; };
 		E45BE9710E8CC7DD009D7055 /* AGL.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AGL.framework; path = /System/Library/Frameworks/AGL.framework; sourceTree = "<absolute>"; };
 		E45BE9720E8CC7DD009D7055 /* ApplicationServices.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = ApplicationServices.framework; path = /System/Library/Frameworks/ApplicationServices.framework; sourceTree = "<absolute>"; };
@@ -322,6 +326,9 @@
 		E4B69E1C0A3A1BDC003C02F2 /* src */ = {
 			isa = PBXGroup;
 			children = (
+				CE9E317216B7321900370006 /* brainTrainment.h */,
+				CE9E317316B7321900370006 /* logger.cpp */,
+				CE9E317416B7321900370006 /* logger.h */,
 				27A3B1B0168588D2000703FB /* telephoneRewired.cpp */,
 				27A3B1B1168588D2000703FB /* telephoneRewired.h */,
 				E4B69E1D0A3A1BDC003C02F2 /* main.cpp */,
@@ -437,6 +444,7 @@
 				27A3B1B7168588D2000703FB /* telephoneRewired.cpp in Sources */,
 				2782D20A169F398300D4005C /* zeoParser.cpp in Sources */,
 				2782D221169F39BE00D4005C /* ofxOscilloscope.cpp in Sources */,
+				CE9E317516B7321900370006 /* logger.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -590,6 +598,7 @@
 				);
 				PREBINDING = NO;
 				PRODUCT_NAME = "$(TARGET_NAME)Debug";
+				SDKROOT = macosx;
 				WRAPPER_EXTENSION = app;
 			};
 			name = Debug;
@@ -676,6 +685,7 @@
 				);
 				PREBINDING = NO;
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = macosx;
 				WRAPPER_EXTENSION = app;
 			};
 			name = Release;
