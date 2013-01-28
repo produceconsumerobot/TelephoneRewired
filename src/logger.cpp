@@ -62,10 +62,10 @@ LoggerThread::LoggerThread(string logDirPath) {
 	
 LoggerThread::~LoggerThread() {
 	// Stop the thread if it's still running
-	if (isThreadRunning()) {
+	//if (isThreadRunning()) {
 		//stopThread();
-		waitForThread(true); // Stops thread and waits for thread to be cleaned up
-	}
+	//	waitForThread(true); // Stops thread and waits for thread to be cleaned up
+	//}
 
 	while(!_loggerQueue.empty()) {
 		log_front();

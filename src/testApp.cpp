@@ -31,12 +31,12 @@ void testApp::setup() {
 
 	// Variables to control output functionality
 	showStimuli = false;
-	showOscilloscope = true;
+	showOscilloscope = false;
 	showScreenEntrainment = false;
 	showLedEntrainment = true;
 	playMidi = true;
-	logData = true;
-	readEEG = true;
+	logData = false;
+	readEEG = false;
 
 	//Setup entrainment data listeners
 	ofAddListener(freqOutThread.outputChanged, this, &testApp::entrainmentOutChange);
@@ -359,9 +359,13 @@ void testApp::exit(){
 #ifdef DEBUG_PRINT 
 	printf("exit()\n");
 #endif
-	freqOutThread.lock();
-	freqOutThread.unsetMidi();
-	freqOutThread.unlock();
+    zeoThread.waitForThread(true);
+    freqOutThread.waitForThread(true);
+    logger.waitForThread(true);
+
+	//freqOutThread.lock();
+	//freqOutThread.unsetMidi();
+	//freqOutThread.unlock();
 
 	midiout.closePort();
 }
