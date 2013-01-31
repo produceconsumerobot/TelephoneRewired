@@ -489,7 +489,9 @@ void FreqOutThread::update() {
 			float absOutDelay = abs(outDelay);
 			_absMaxOutDelay = max(absOutDelay, _absMaxOutDelay);
 			_absAveOutDelay = (_absAveOutDelay*(_aveDecay-1.) + absOutDelay)/_aveDecay;
-			if (_printOut & OUTPUT_DELAYS) cout << fixed << setprecision(4) << "absMax: " << _absMaxOutDelay << ", absAve: " << _absAveOutDelay << ", Delay: " << outDelay << "\n" ;
+			if (_printOut & OUTPUT_DELAYS) cout << fixed << setprecision(4) << "absMax: " << _absMaxOutDelay 
+				<< ", absAve: " << _absAveOutDelay << ", Delay: " << outDelay << ", Dur: " << _outputDelay 
+				<< ", Freq: " << _getCurrentFreq() << "\n" ;
 				//printf("absMax: %.3f, absAve: %.3f, Delay: %.3f\n", _absMaxOutDelay, _absAveOutDelay, outDelay);
 
 			_currentOutputStartTime = startTime;
