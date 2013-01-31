@@ -703,4 +703,151 @@ void ZeoReaderThread::threadedFunction() {
 	}
 }
 
+Stimulus::Stimulus() 
+{
+	_type = None;
+	_data = "";
+
+	_font.loadFont("verdana.ttf", 12, true, true);
+	_fontColor = ofColor(100,100,100);
+	_stimulusRect = ofRectangle(ofGetWindowHeight()/2, ofGetWindowWidth()/2, 100, 100);
+}
+
+Stimulus::Stimulus(types type, string data) 
+{
+	_type = type;
+	_data = data;
+
+	_font.loadFont("verdana.ttf", 12, true, true);
+	_fontColor = ofColor(100,100,100);
+	_stimulusRect = ofRectangle(ofGetWindowHeight()/2, ofGetWindowWidth()/2, 100, 100);
+}
+
+void Stimulus::showStimulus() 
+{
+	switch (_type) {
+	case Sound:
+		// play sound
+		cout << "playing sound \n";
+		break;
+	case Text:
+		// show text
+
+		ofSetColor(_fontColor);
+		_font.drawString(_data, _stimulusRect.getX(), _stimulusRect.getX());
+
+		cout << "showing text \n";
+		break;
+	default:
+		break;
+	}
+}
+
+StimulusPlayer::StimulusPlayer() {
+	loadStimuli("/stimuli/");
+	_nStimuliToShow = min(15, (int) _stimulusCycle.size());
+	_stimulusIterator = _nStimuliToShow;
+	_stimulusCycleOn = false;
+	_fontColor = ofColor(100,100,100);
+	_stimulusRect = ofRectangle(ofGetWindowHeight()/2, ofGetWindowWidth()/2, 100, 100);
+}
+
+StimulusPlayer::StimulusPlayer(string path) {
+	//string path = "data/stimuli/";
+	loadStimuli(path);
+	_nStimuliToShow = min(15, (int) _stimulusCycle.size());
+	_stimulusIterator = _nStimuliToShow;
+	_stimulusCycleOn = false;
+	_stimulusRect = ofRectangle(ofGetWindowHeight()/2, ofGetWindowWidth()/2, 100, 100);
+}
+
+void StimulusPlayer::loadStimuli(string path) 
+{
+	// Load Sounds
+	string test = ofToDataPath(path + "sounds/");
+	 ofDirectory dir(ofToDataPath(path + "sounds/"));
+	 if (dir.exists()) {
+		 dir.allowExt("mp3");
+		 dir.listDir();
+		 for (int i=0; i<dir.numFiles(); i++) {
+			 _allStimuli.push_back(Stimulus(Stimulus::types::Sound, dir.getPath(i)));
+		 }
+	 }
+
+	 // Load Text
+	 string filePath = path + "text.txt";
+	 ofFile file(ofToDataPath(filePath));
+	 if (file.exists() && file.canRead()) {
+		 ofBuffer buffer = ofBufferFromFile(filePath);
+		 while (!buffer.isLastLine()) {
+			 _allStimuli.push_back(Stimulus(Stimulus::types::Text, buffer.getNextLine()));
+		 }
+	 }
+
+	 _stimulusCycle = _allStimuli;
+}
+
+void StimulusPlayer::setTimes(
+	unsigned long stimulusOnTime, 
+	unsigned long interStimulusBaseDelayTime, 
+	unsigned long interStimulusRandDelayTime) 
+{
+	_stimulusOnTime = stimulusOnTime;
+	_interStimulusBaseDelayTime = interStimulusBaseDelayTime;
+	_interStimulusRandDelayTime = interStimulusRandDelayTime;
+}
+
+void StimulusPlayer::start() {
+	_currentStimulusTimerStart = ofGetElapsedTimeMillis();
+	_stimulusCycleOn = true;
+	_stimulusIterator = 0;
+	ofSeedRandom();
+	_currentStimulusDelayTime = _interStimulusBaseDelayTime + ((unsigned long) ofRandom(0, _interStimulusRandDelayTime));
+}
+
+void StimulusPlayer::randomizeStimuli()
+{
+	_stimulusCycle = _allStimuli;
+	ofRandomize(_stimulusCycle);
+	_stimulusCycle.erase(_stimulusCycle.begin(), _stimulusCycle.begin() + _nStimuliToShow);
+}
+
+int StimulusPlayer::updateStimulus() {
+	if (_stimulusCycleOn) {
+
+		if (_stimulusIterator >= _nStimuliToShow) {
+			return _nStimuliToShow - _stimulusIterator;
+		}
+
+		unsigned long long currentTime = ofGetElapsedTimeMillis();
+
+		// If interstimulus delay exceeded
+		if ((currentTime - _currentStimulusTimerStart) > _currentStimulusDelayTime) {
+
+			// If stimulus ON interval exceeded
+			if ((currentTime - _currentStimulusTimerStart) 
+				> (_currentStimulusDelayTime + _stimulusOnTime)) {
+					// iterate stimulus
+					_stimulusIterator++;
+					
+					// Recalculate the stimulus ON time (with randomness)
+					_currentStimulusDelayTime = _interStimulusBaseDelayTime + ((unsigned long) ofRandom(0, _interStimulusRandDelayTime));
+					_currentStimulusTimerStart = ofGetElapsedTimeMillis();
+
+					// If we reached the number of stimuli to show
+					if (_stimulusIterator >= _nStimuliToShow) {
+						// Turn the cycle off
+						_stimulusCycleOn = false;
+					}
+
+			} else { // If interstimulus delay NOT exceeded
+				// Show stimulus
+				_stimulusCycle.at(_stimulusIterator).showStimulus();
+			}
+		}
+
+		return _nStimuliToShow - _stimulusIterator;
+	}
+	return 0;
+}
 

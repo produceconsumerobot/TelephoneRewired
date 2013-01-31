@@ -58,7 +58,7 @@
       <PrecompiledHeader />
       <WarningLevel>Level3</WarningLevel>
       <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
-      <AdditionalIncludeDirectories>..\..\..\addons\zeoParser\src;..\..\..\addons\ofxOscilloscope\src;..\..\..\addons\ofxMidi\src\desktop\rtmidi;..\..\..\addons\ofxMidi\src;%(AdditionalIncludeDirectories);src;</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\..\..\addons\zeoParser\src;..\..\..\addons\ofxOscilloscope\src;..\..\..\addons\ofxMidi\src\desktop\rtmidi;..\..\..\addons\ofxMidi\src;%(AdditionalIncludeDirectories);src</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <OutputFile>$(OutDir)$(TargetName)$(TargetExt)</OutputFile>

@@ -144,5 +144,93 @@ public:
 	ofEvent<bool> newSliceData;
 };
 
+class Stimulus {
+public:
+	enum types {Text, Sound, None};
+	Stimulus();
+	Stimulus(types type, string data);
+	void showStimulus();
+
+private:
+	string _data;
+	types _type;
+	ofColor _fontColor;
+	ofTrueTypeFont _font;
+	ofRectangle _stimulusRect;
+};
+
+class StimulusPlayer {
+private:
+	std::vector<Stimulus> _allStimuli;
+	std::vector<Stimulus> _stimulusCycle;
+	//Stimulus _currentStimulus;
+	bool _stimulusCycleOn;
+
+	// Stimulus timing varaiables (in milliseconds)
+	unsigned long long _currentStimulusTimerStart;
+	unsigned long _stimulusOnTime;
+	unsigned long _currentStimulusDelayTime;
+	unsigned long _interStimulusBaseDelayTime;
+	unsigned long _interStimulusRandDelayTime;
+	//unsigned long _initialStimulusDelay;
+
+	int _stimulusIterator;
+	int _nStimuliToShow;
+
+	// Stimuli properties
+	ofColor _fontColor;
+	ofRectangle _stimulusRect;
+	
+public:
+	/* 
+	** StimulusPlayer()
+	**		Sets random seed?
+	**		Set stimulus iterator to number of stimuli to show
+	*/
+	StimulusPlayer();
+
+	// StimulusPlayer(string path)
+	//		Loads stimuli from given path
+	StimulusPlayer(string path); 
+
+	/* 
+	** loadStimuli(string path)
+	**		Loads stimuli from path
+	*/
+	void loadStimuli(string path);
+
+	/*
+	** void setTimes(unsigned long baseOnTime, unsigned long randOnTime, unsigned long interStimulusDelay)
+	**		Sets stimulus timing (in milliseconds)
+	*/
+	void setTimes(unsigned long baseOnTime, unsigned long randOnTime, unsigned long interStimulusDelay);
+
+	/* 
+	** startStimulusCycle()
+	**		Starts the stimulus cycle
+	**	ALGORITHM:
+	**		Sets timers
+	**		Flips cycleOn bit
+	**		Resets the stimulus iterator
+	**		Recalculate the stimulus ON time (with randomness)
+	*/
+	void start();
+
+	void randomizeStimuli(); // Randomizes the stimulus order
+
+	/* 
+	** updateStimulus()
+	**	ALGORITHM:
+	**		Checks current time against stimulus times 
+	**		Shows the stimulus if it's time 
+	**		Updates the stimulus iterator
+	**	OUTPUT:
+	**		int nRemaining	-- number of remaining stimuli to show
+	*/
+	int updateStimulus();
+
+	
+	//Stimulus getCurrentStimulus();
+};
 
 #endif

@@ -6,16 +6,16 @@ void testApp::setup() {
 	// **** COMPUTER SPECIFIC VARIABLES **** //
 
 	// Arduino Port
-	//string arduinoPort = "\\\\.\\COM28"; // Sean, Windows, Uno
+	string arduinoPort = "\\\\.\\COM4"; // Sean, Windows, Uno
 	//string arduinoPort = "tty.usbmodemfa141"; // Sean, Mac, Arduino Decimila
 	//string arduinoPort = "/dev/cu.usbserial-A70064Yu"; // Sean, Mac, Arduino Decimila
     //tty.usbmodemfa141
     //cu.usbmodemfa141
-    string arduinoPort = "tty.usbmodem1411"; //Mac
+    //string arduinoPort = "tty.usbmodem1411"; //Mac
 
 	// Zeo Port
-	//string zeoPort = "\\\\.\\COM26";
-    string zeoPort = "tty.usbserial"; //Mac
+	string zeoPort = "\\\\.\\COM3";
+    //string zeoPort = "tty.usbserial"; //Mac
     
     // Midi Port
     int midiPort = 0;
@@ -30,13 +30,13 @@ void testApp::setup() {
 	// **** OPTIONS **** //
 
 	// Variables to control output functionality
-	showStimuli = false;
+	showStimuli = true;
 	showOscilloscope = false;
-	showScreenEntrainment = true;
-	showLedEntrainment = false;
+	showScreenEntrainment = false;
+	showLedEntrainment = true;
 	playMidi = true;
 	logData = false;
-	readEEG = false;
+	readEEG = true;
 
 	//Setup entrainment data listeners
 	ofAddListener(freqOutThread.outputChanged, this, &testApp::entrainmentOutChange);
@@ -89,7 +89,7 @@ void testApp::setup() {
 	ofBackground(0, 0, 0);
 
 	// Sync with screen (~50Hz?)
-	ofSetVerticalSync(true);
+	//ofSetVerticalSync(true);
 
 	if (showScreenEntrainment) {
 		// Turn on screen flashing
@@ -98,6 +98,13 @@ void testApp::setup() {
 
 	SetupOscilloscopes();
 	isScopePaused = false;
+
+	// Setup StimulusPlayer
+	if (showStimuli) {
+		stimulusPlayer = StimulusPlayer("data/stimuli/");
+		stimulusPlayer.setTimes(1000, 2000, 2000);
+		stimulusPlayer.randomizeStimuli();
+	}
 	
 	// **** Start threads **** //
 	// DO THIS LAST OR YOU NEED TO LOCK() ON SETUP FUNCTIONS
@@ -117,6 +124,8 @@ void testApp::setup() {
 	if (logData) {
 		logger.startThread(true, false);
 	}
+
+	drawTime = ofGetElapsedTimef();
 }
 
 //--------------------------------------------------------------
@@ -346,13 +355,18 @@ void testApp::draw(){
 	}
 
 	if (showStimuli) {
-
+		if (stimulusPlayer.updateStimulus() <= 0) {
+			cout << "stimulus list complete \n";
+		}
 	}
 
 	// Draw oscilloscope data
 	if (showOscilloscope) {
 			scopeWin.plot();
 	}
+
+	//cout << "time=" << ofGetElapsedTimef() << ", diff=" << ofGetElapsedTimef() - drawTime << "\n";
+	//drawTime = ofGetElapsedTimef();
 }
 
 //--------------------------------------------------------------
@@ -408,6 +422,12 @@ void testApp::keyReleased(int key){
 	}
 	if ( key == 'p') {
 		isScopePaused = !isScopePaused;
+	}
+	if ( key == 's') {
+		if (showStimuli) {
+			stimulusPlayer.randomizeStimuli();
+			stimulusPlayer.start();
+		}
 	}
 }
 

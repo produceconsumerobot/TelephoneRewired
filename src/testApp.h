@@ -39,6 +39,10 @@ class testApp : public ofBaseApp{
 		LoggerThread logger;
 		string logDirPath;
 
+		StimulusPlayer stimulusPlayer;
+
+		float drawTime;
+
 		// Oscilloscope
 		ofxMultiScope scopeWin;
 		bool isScopePaused;
