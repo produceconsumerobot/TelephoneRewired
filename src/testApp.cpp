@@ -32,8 +32,8 @@ void testApp::setup() {
 	// Variables to control output functionality
 	showStimuli = false;
 	showOscilloscope = false;
-	showScreenEntrainment = false;
-	showLedEntrainment = true;
+	showScreenEntrainment = true;
+	showLedEntrainment = false;
 	playMidi = true;
 	logData = false;
 	readEEG = false;

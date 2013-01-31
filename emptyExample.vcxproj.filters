@@ -40,6 +40,9 @@
     <ClCompile Include="..\..\..\addons\ofxOscilloscope\src\ofxOscilloscope.cpp">
       <Filter>addons\ofxOscilloscope\src</Filter>
     </ClCompile>
+    <ClCompile Include="src\logger.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="src">
@@ -119,7 +122,10 @@
     <ClInclude Include="..\..\..\addons\ofxOscilloscope\src\ofxOscilloscope.h">
       <Filter>addons\ofxOscilloscope\src</Filter>
     </ClInclude>
-    <ClInclude Include="src\entrainmentCycles.h">
+    <ClInclude Include="src\logger.h">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="src\brainTrainment.h">
       <Filter>src</Filter>
     </ClInclude>
   </ItemGroup>

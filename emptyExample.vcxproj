@@ -109,6 +109,7 @@
     <ClCompile Include="..\..\..\addons\ofxMidi\src\ofxMidiOut.cpp" />
     <ClCompile Include="..\..\..\addons\ofxOscilloscope\src\ofxOscilloscope.cpp" />
     <ClCompile Include="..\..\..\addons\zeoParser\src\zeoParser.cpp" />
+    <ClCompile Include="src\logger.cpp" />
     <ClCompile Include="src\main.cpp" />
     <ClCompile Include="src\telephoneRewired.cpp" />
     <ClCompile Include="src\testApp.cpp" />
@@ -127,7 +128,8 @@
     <ClInclude Include="..\..\..\addons\ofxMidi\src\ofxMidiTypes.h" />
     <ClInclude Include="..\..\..\addons\ofxOscilloscope\src\ofxOscilloscope.h" />
     <ClInclude Include="..\..\..\addons\zeoParser\src\zeoParser.h" />
-    <ClInclude Include="src\entrainmentCycles.h" />
+    <ClInclude Include="src\brainTrainment.h" />
+    <ClInclude Include="src\logger.h" />
     <ClInclude Include="src\telephoneRewired.h" />
     <ClInclude Include="src\testApp.h" />
   </ItemGroup>
