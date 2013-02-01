@@ -18,7 +18,8 @@ void testApp::setup() {
     //string zeoPort = "tty.usbserial"; //Mac
     
     // Midi Port
-    int midiPort = 0;
+    //int midiPort = 0;
+	int midiPort = 1;
     
 	// Log Directory
 	logDirPath = "../../LogData/";
@@ -101,10 +102,13 @@ void testApp::setup() {
 
 	// Setup StimulusPlayer
 	if (showStimuli) {
-		stimulusPlayer = StimulusPlayer("data/stimuli/");
-		stimulusPlayer.setTimes(1000, 2000, 2000);
-		stimulusPlayer.randomizeStimuli();
+		//stimulusPlayer = StimulusPlayer("data/stimuli/");
+		stimulusPlayer.loadStimuli("data/stimuli/form1.txt", "stimuli/sounds/form4/");
+		stimulusPlayer.setTimes(0.5, 0.5, 0.2);
+		//stimulusPlayer.randomizeStimuli();
 	}
+
+	participantID = 0;
 	
 	// **** Start threads **** //
 	// DO THIS LAST OR YOU NEED TO LOCK() ON SETUP FUNCTIONS
@@ -356,7 +360,7 @@ void testApp::draw(){
 
 	if (showStimuli) {
 		if (stimulusPlayer.updateStimulus() <= 0) {
-			cout << "stimulus list complete \n";
+			//cout << "stimulus list complete \n";
 		}
 	}
 
@@ -425,7 +429,13 @@ void testApp::keyReleased(int key){
 	}
 	if ( key == 's') {
 		if (showStimuli) {
-			stimulusPlayer.randomizeStimuli();
+			//stimulusPlayer.randomizeStimuli();
+			participantID++;
+			if (participantID % 2) { 
+				stimulusPlayer.loadStimuli("data/stimuli/text/form4.txt", "stimuli/audio/form1/");
+			} else {
+				stimulusPlayer.loadStimuli("data/stimuli/text/form1.txt", "stimuli/audio/form4/");
+			}
 			stimulusPlayer.start();
 		}
 	}

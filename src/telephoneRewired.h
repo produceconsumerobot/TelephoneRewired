@@ -149,14 +149,19 @@ public:
 	enum types {Text, Sound, None};
 	Stimulus();
 	Stimulus(types type, string data);
-	void showStimulus();
+	void playStimulus();
+	void stopStimulus();
 
 private:
 	string _data;
 	types _type;
 	ofColor _fontColor;
 	ofTrueTypeFont _font;
-	ofRectangle _stimulusRect;
+	ofPoint _stimulusCenter;
+	bool _isShowing;
+	ofSoundPlayer _mySound;
+
+	void _setup();
 };
 
 class StimulusPlayer {
@@ -179,7 +184,9 @@ private:
 
 	// Stimuli properties
 	ofColor _fontColor;
-	ofRectangle _stimulusRect;
+	//ofPoint _stimulusCenter;
+
+	void _setup();
 	
 public:
 	/* 
@@ -197,13 +204,13 @@ public:
 	** loadStimuli(string path)
 	**		Loads stimuli from path
 	*/
-	void loadStimuli(string path);
+	int loadStimuli(string textFilePath, string soundDirPath);
 
 	/*
 	** void setTimes(unsigned long baseOnTime, unsigned long randOnTime, unsigned long interStimulusDelay)
 	**		Sets stimulus timing (in milliseconds)
 	*/
-	void setTimes(unsigned long baseOnTime, unsigned long randOnTime, unsigned long interStimulusDelay);
+	void setTimes(float baseOnTime, float randOnTime, float interStimulusDelay);
 
 	/* 
 	** startStimulusCycle()

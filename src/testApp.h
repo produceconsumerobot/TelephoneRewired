@@ -39,7 +39,10 @@ class testApp : public ofBaseApp{
 		LoggerThread logger;
 		string logDirPath;
 
+		// Player to show stimuli
 		StimulusPlayer stimulusPlayer;
+
+		long participantID;
 
 		float drawTime;
 

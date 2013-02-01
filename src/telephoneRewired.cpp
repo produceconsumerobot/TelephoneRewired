@@ -708,9 +708,7 @@ Stimulus::Stimulus()
 	_type = None;
 	_data = "";
 
-	_font.loadFont("verdana.ttf", 12, true, true);
-	_fontColor = ofColor(100,100,100);
-	_stimulusRect = ofRectangle(ofGetWindowHeight()/2, ofGetWindowWidth()/2, 100, 100);
+	_setup();
 }
 
 Stimulus::Stimulus(types type, string data) 
@@ -718,91 +716,143 @@ Stimulus::Stimulus(types type, string data)
 	_type = type;
 	_data = data;
 
-	_font.loadFont("verdana.ttf", 12, true, true);
-	_fontColor = ofColor(100,100,100);
-	_stimulusRect = ofRectangle(ofGetWindowHeight()/2, ofGetWindowWidth()/2, 100, 100);
+	_setup();
 }
 
-void Stimulus::showStimulus() 
+void Stimulus::_setup() 
+{
+	_font.loadFont("verdana.ttf", 60, true, true);
+	_fontColor = ofColor(0,220,0);
+	_stimulusCenter = ofPoint(ofGetWindowWidth()/2, ofGetWindowHeight()/2);
+	_isShowing = false;
+}
+
+void Stimulus::playStimulus() 
 {
 	switch (_type) {
 	case Sound:
 		// play sound
-		cout << "playing sound \n";
+		if (!_isShowing) {
+			//ofSoundPlayer _mySound;
+			_mySound.loadSound(_data); //DOCUMENTATION PAGE EXAMPLE IS WRONG
+			_mySound.setVolume(0.85f);
+			_mySound.play();
+		}
+
+		//cout << "playing sound \n";
 		break;
 	case Text:
 		// show text
-
 		ofSetColor(_fontColor);
-		_font.drawString(_data, _stimulusRect.getX(), _stimulusRect.getX());
+		_font.drawString(_data, _stimulusCenter.x, _stimulusCenter.y);
 
-		cout << "showing text \n";
+		//cout << "showing text \n";
 		break;
 	default:
 		break;
 	}
+
+	_isShowing = true;
+}
+
+void Stimulus::stopStimulus() 
+{
+	_isShowing = false;
 }
 
 StimulusPlayer::StimulusPlayer() {
-	loadStimuli("/stimuli/");
-	_nStimuliToShow = min(15, (int) _stimulusCycle.size());
-	_stimulusIterator = _nStimuliToShow;
-	_stimulusCycleOn = false;
-	_fontColor = ofColor(100,100,100);
-	_stimulusRect = ofRectangle(ofGetWindowHeight()/2, ofGetWindowWidth()/2, 100, 100);
+	//loadStimuli("/stimuli/");
+	//_nStimuliToShow = min(15, (int) _stimulusCycle.size());
+
+	_setup();
 }
 
 StimulusPlayer::StimulusPlayer(string path) {
 	//string path = "data/stimuli/";
-	loadStimuli(path);
-	_nStimuliToShow = min(15, (int) _stimulusCycle.size());
-	_stimulusIterator = _nStimuliToShow;
-	_stimulusCycleOn = false;
-	_stimulusRect = ofRectangle(ofGetWindowHeight()/2, ofGetWindowWidth()/2, 100, 100);
+	//loadStimuli(path);
+	//_nStimuliToShow = min(15, (int) _stimulusCycle.size());
+
+	_setup();
 }
 
-void StimulusPlayer::loadStimuli(string path) 
+void StimulusPlayer::_setup() 
 {
-	// Load Sounds
-	string test = ofToDataPath(path + "sounds/");
-	 ofDirectory dir(ofToDataPath(path + "sounds/"));
-	 if (dir.exists()) {
-		 dir.allowExt("mp3");
-		 dir.listDir();
-		 for (int i=0; i<dir.numFiles(); i++) {
-			 _allStimuli.push_back(Stimulus(Stimulus::types::Sound, dir.getPath(i)));
-		 }
-	 }
+	ofSeedRandom();
+	_nStimuliToShow = 0;
+	_stimulusIterator = _nStimuliToShow;
+	_stimulusCycleOn = false;
+	//_stimulusCenter = ofPoint(ofGetWindowWidth()/2, ofGetWindowHeight()/2);
+}
 
-	 // Load Text
-	 string filePath = path + "text.txt";
-	 ofFile file(ofToDataPath(filePath));
-	 if (file.exists() && file.canRead()) {
-		 ofBuffer buffer = ofBufferFromFile(filePath);
-		 while (!buffer.isLastLine()) {
-			 _allStimuli.push_back(Stimulus(Stimulus::types::Text, buffer.getNextLine()));
-		 }
-	 }
 
-	 _stimulusCycle = _allStimuli;
+int StimulusPlayer::loadStimuli(string textFilePath, string soundDirPath) 
+{
+	//cout << "StimulusPlayer::loadStimuli\n";
+
+	// Load sounds
+	std::vector<Stimulus> sounds;
+	//string t = ofToDataPath(soundDirPath);
+	//ofDirectory dir1(ofToDataPath(soundDirPath)); // REPORT BUG
+	ofDirectory dir(soundDirPath);
+	//dir1.listDir();
+	//string p = dir.getPath();
+	//string a = dir.getAbsolutePath();
+	//string a1 = dir1.getAbsolutePath();
+	if (dir.exists()) {
+		dir.allowExt("mp3");
+		dir.listDir();
+		for (int i=0; i<dir.numFiles(); i++) {
+			sounds.push_back(Stimulus(Stimulus::types::Sound, dir.getPath(i)));
+		}
+	}
+
+	// Load Text
+	//string filePath = path + "text.txt";
+	std::vector<Stimulus> text;
+	ofFile file(ofToDataPath(textFilePath));
+	if (file.exists() && file.canRead()) {
+		ofBuffer buffer = ofBufferFromFile(textFilePath);
+		while (!buffer.isLastLine()) {
+			text.push_back(Stimulus(Stimulus::types::Text, buffer.getNextLine()));
+		}
+	}
+
+	_allStimuli.clear();
+
+	// Create stimulus vector by interleaving sounds and text
+	if (text.size() != sounds.size()) {
+		fprintf(stderr, "Error StimulusPlayer::loadStimuli -- text.size() != sounds.size()");
+		return -1;
+	} else {
+		for (int i=0; i<sounds.size(); i++) {
+			_allStimuli.push_back(sounds.at(i));
+			_allStimuli.push_back(text.at(i));
+		}
+	}
+
+	_stimulusCycle = _allStimuli;
+	_nStimuliToShow = _stimulusCycle.size();
+	_stimulusIterator = _nStimuliToShow;
+
+	//cout << "END StimulusPlayer::loadStimuli\n";
+	return 0;
 }
 
 void StimulusPlayer::setTimes(
-	unsigned long stimulusOnTime, 
-	unsigned long interStimulusBaseDelayTime, 
-	unsigned long interStimulusRandDelayTime) 
+	float stimulusOnTime, 
+	float interStimulusBaseDelayTime, 
+	float interStimulusRandDelayTime) 
 {
-	_stimulusOnTime = stimulusOnTime;
-	_interStimulusBaseDelayTime = interStimulusBaseDelayTime;
-	_interStimulusRandDelayTime = interStimulusRandDelayTime;
+	_stimulusOnTime = stimulusOnTime * 1000;
+	_interStimulusBaseDelayTime = interStimulusBaseDelayTime * 1000;
+	_interStimulusRandDelayTime = interStimulusRandDelayTime * 1000;
 }
 
 void StimulusPlayer::start() {
-	_currentStimulusTimerStart = ofGetElapsedTimeMillis();
 	_stimulusCycleOn = true;
 	_stimulusIterator = 0;
-	ofSeedRandom();
 	_currentStimulusDelayTime = _interStimulusBaseDelayTime + ((unsigned long) ofRandom(0, _interStimulusRandDelayTime));
+	_currentStimulusTimerStart = ofGetElapsedTimeMillis();
 }
 
 void StimulusPlayer::randomizeStimuli()
@@ -813,6 +863,7 @@ void StimulusPlayer::randomizeStimuli()
 }
 
 int StimulusPlayer::updateStimulus() {
+	//cout << "StimulusPlayer::updateStimulus()\n";
 	if (_stimulusCycleOn) {
 
 		if (_stimulusIterator >= _nStimuliToShow) {
@@ -827,6 +878,10 @@ int StimulusPlayer::updateStimulus() {
 			// If stimulus ON interval exceeded
 			if ((currentTime - _currentStimulusTimerStart) 
 				> (_currentStimulusDelayTime + _stimulusOnTime)) {
+
+					// Stop current stimulus
+					_stimulusCycle.at(_stimulusIterator).stopStimulus();
+
 					// iterate stimulus
 					_stimulusIterator++;
 					
@@ -842,7 +897,7 @@ int StimulusPlayer::updateStimulus() {
 
 			} else { // If interstimulus delay NOT exceeded
 				// Show stimulus
-				_stimulusCycle.at(_stimulusIterator).showStimulus();
+				_stimulusCycle.at(_stimulusIterator).playStimulus();
 			}
 		}
 
