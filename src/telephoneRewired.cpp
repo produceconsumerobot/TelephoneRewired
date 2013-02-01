@@ -833,8 +833,12 @@ int StimulusPlayer::loadStimuli(string textFilePath, string soundDirPath)
 	// Load sounds
 	std::vector<Stimulus> sounds;
 	//string t = ofToDataPath(soundDirPath);
-	//ofDirectory dir1(ofToDataPath(soundDirPath)); // REPORT BUG
+	ofDirectory dir1(ofToDataPath(soundDirPath)); // REPORT BUG
 	ofDirectory dir(soundDirPath);
+	bool b = dir.exists();
+	string s = dir.getAbsolutePath();
+	bool b1 = dir1.exists();
+	string s1 = dir1.getAbsolutePath();
 	//cout << "StimulusPlayer::loadStimuli dir " << myGetElapsedTimef() << "\n";
 	if (dir.exists()) {
 		//cout << "StimulusPlayer::loadStimuli dir.exists() " << myGetElapsedTimef() << "\n";

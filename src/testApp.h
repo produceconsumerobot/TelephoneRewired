@@ -24,13 +24,19 @@ class testApp : public ofBaseApp{
 		ofxMidiOut midiout;
 
 		// Variables to control output functionality
+		bool showInstructions;
 		bool showStimuli;
+		bool checkButtonPresses;
 		bool showOscilloscope;
 		bool showScreenEntrainment;
 		bool showLedEntrainment;
 		bool playMidi;
 		bool logData;
 		bool readEEG;
+
+		// Input Arduino for button presses
+		ofArduino inputArduino;
+		bool isButtonPressed; // Track changes in button state
 
 		//ZeoParser zeo;
 		ZeoReaderThread zeoThread;
@@ -67,6 +73,8 @@ class testApp : public ofBaseApp{
 		void plotEntrainmentFreqData(float freq);
 		void stimulusPlay(Stimulus & stimulus);
 		void stimulusStop(Stimulus & stimulus);
+		void buttonDown();
+		void buttonUp();
 
 		void setup();
 		void update();

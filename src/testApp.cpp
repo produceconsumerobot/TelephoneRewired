@@ -6,16 +6,19 @@ void testApp::setup() {
 
 	// **** COMPUTER SPECIFIC VARIABLES **** //
 
-	// Arduino Port
-	string arduinoPort = "\\\\.\\COM4"; // Sean, Windows, Uno
-	//string arduinoPort = "tty.usbmodemfa141"; // Sean, Mac, Arduino Decimila
-	//string arduinoPort = "/dev/cu.usbserial-A70064Yu"; // Sean, Mac, Arduino Decimila
+	// Arduino for outputing on LEDs
+	string ledArduinoPort = "\\\\.\\COM4"; // Sean, Windows, Uno
+	//string ledArduinoPort = "tty.usbmodemfa141"; // Sean, Mac, Arduino Decimila
+	//string ledArduinoPort = "/dev/cu.usbserial-A70064Yu"; // Sean, Mac, Arduino Decimila
     //tty.usbmodemfa141
     //cu.usbmodemfa141
-    //string arduinoPort = "tty.usbmodem1411"; //Mac
+    //string ledArduinoPort = "tty.usbmodem1411"; //Mac
+
+	// Arduino for taking button press inputs
+	string inputArduinoPort = "\\\\.\\COM6";
 
 	// Zeo Port
-	string zeoPort = "\\\\.\\COM3";
+	string zeoPort = "\\\\.\\COM5";
     //string zeoPort = "tty.usbserial"; //Mac
     
     // Midi Port
@@ -33,13 +36,17 @@ void testApp::setup() {
 	// **** OPTIONS **** //
 
 	// Variables to control output functionality
+	showInstructions = false;
 	showStimuli = true;
-	showOscilloscope = false;
+	checkButtonPresses = false; // requires Arduino
+
 	showScreenEntrainment = false;
-	showLedEntrainment = true;
+	showLedEntrainment = true; // requires Arduino
 	playMidi = true;
+
+	readEEG = true; // requires Zeo
+	showOscilloscope = false; // sloooows down screen drawing
 	logData = true;
-	readEEG = true;
 
 	//Setup entrainment data listeners
 	ofAddListener(freqOutThread.outputChanged, this, &testApp::entrainmentOutChange);
@@ -65,9 +72,16 @@ void testApp::setup() {
 	midiValue = 100;
 	// *** END OPTIONS *** //
 
-	// Setup Arduino
+	// Set up input button press Arduino
+	inputArduino.connect(inputArduinoPort, 57600);
+	while(!inputArduino.isArduinoReady()); 
+	inputArduino.sendAnalogPinReporting(0, ARD_ANALOG);
+	inputArduino.update();
+	isButtonPressed = false;
+
+	// Setup LED output Arduino
 	if (showLedEntrainment) {
-		freqOutThread.setupLights(arduinoPort, 57600, vLedPins);
+		freqOutThread.setupLights(ledArduinoPort, 57600, vLedPins);
 	}
 
 	// Setup Midi
@@ -365,11 +379,52 @@ void testApp::plotEntrainmentFreqData(float freq) {
 }
 
 //--------------------------------------------------------------
+void testApp::buttonDown(){
+#ifdef DEBUG_PRINT 
+	printf("buttonDown()\n");
+#endif
+	if (!isButtonPressed) {
+		if (logData) {
+			logger.lock();
+			std::stringstream ss;
+			ss << myGetElapsedTimeMillis() << "," << vLogFormat << "," << "BD" << ",\n";
+			logger.loggerQueue.push(ss.str());
+			logger.unlock();
+		}
+	}
+	isButtonPressed = true;
+}
+
+//--------------------------------------------------------------
+void testApp::buttonUp(){
+#ifdef DEBUG_PRINT 
+	printf("buttonUp()\n");
+#endif
+	if (isButtonPressed) {
+		if (logData) {
+			logger.lock();
+			std::stringstream ss;
+			ss << myGetElapsedTimeMillis() << "," << vLogFormat << "," << "BU" << ",\n";
+			logger.loggerQueue.push(ss.str());
+			logger.unlock();
+		}
+	}
+	isButtonPressed = false;
+}
+
+
+//--------------------------------------------------------------
 void testApp::update(){
 #ifdef DEBUG_PRINT 
 	printf("update()\n");
 #endif
-
+	inputArduino.update();
+	int input = inputArduino.getAnalog(0);
+	if (input > 512) {
+		buttonDown();
+	} else {
+		buttonUp();
+	}
 }
 
 //--------------------------------------------------------------
@@ -429,6 +484,7 @@ void testApp::exit(){
 	//freqOutThread.unlock();
 
 	midiout.closePort();
+	inputArduino.disconnect();
 }
 
 //--------------------------------------------------------------

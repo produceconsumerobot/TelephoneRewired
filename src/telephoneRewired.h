@@ -250,10 +250,10 @@ class InstructionsPlayer
 {
 
 private:
-	const int _nPages = 3;
+	//const int _nPages = 3;
 	int _currentPage;
 
-	const float _timeoutDelay = 3.; // Seconds
+	//const float _timeoutDelay = 3.; // Seconds
 	unsigned long _lastButtonPressTime;
 
 public:
