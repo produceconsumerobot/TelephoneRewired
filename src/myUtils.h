@@ -15,6 +15,16 @@
 
 #include "ofMain.h"
 
+static string strVectorF(std::vector<float> vec)
+{
+	std::ostringstream os;
+	for (int i=0; i<vec.size(); i++) {
+		//s = s + vec.at(i) + ",";
+		os << fixed << setprecision(3)  << vec.at(i) << ",";
+	}
+	return os.str();
+}
+
 static unsigned long myStartTime;
 
 static unsigned long myGetSystemTime( ) {
@@ -30,7 +40,7 @@ static float myGetElapsedTimef(){
 }
 
 static void myResetElapsedTimeCounter(){
-	myStartTime = myGetSystemTime();
+	myStartTime = (unsigned long) myGetSystemTime();
 }
 
 #endif

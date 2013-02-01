@@ -45,6 +45,8 @@ class testApp : public ofBaseApp{
 
 		unsigned long participantNumber;
 
+		int vLogFormat;
+
 		float drawTime;
 
 		// Oscilloscope
@@ -63,6 +65,8 @@ class testApp : public ofBaseApp{
 		void entrainmentOutChange(bool & output);
 		void entrainmentFreqChange(float & freq);
 		void plotEntrainmentFreqData(float freq);
+		void stimulusPlay(Stimulus & stimulus);
+		void stimulusStop(Stimulus & stimulus);
 
 		void setup();
 		void update();

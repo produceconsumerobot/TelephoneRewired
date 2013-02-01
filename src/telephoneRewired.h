@@ -47,8 +47,8 @@ private:
 	int _freqIterator;
 	std::vector<freqInterval> _freqCycle;
 
-	unsigned long long _currentFreqStartTime; // milliseconds
-	unsigned long long _currentOutputStartTime; // milliseconds
+	unsigned long _currentFreqStartTime; // milliseconds
+	unsigned long _currentOutputStartTime; // milliseconds
 
 	std::vector<int> _ledPins;
 	std::vector<int> _ledPWMs;
@@ -90,7 +90,7 @@ private:
 	
 	// debugging rollover of ofElapsedTime
 	bool debuggingRollover;
-	unsigned long long _testTimeRollOver();
+	unsigned long _testTimeRollOver();
 	unsigned long timeRolloverTest;
 	unsigned long startRolloverTest;
 
@@ -153,6 +153,8 @@ public:
 	Stimulus(types type, string data);
 	void playStimulus();
 	void stopStimulus();
+	bool isPlaying();
+	string str();
 
 private:
 	string _data;
@@ -160,7 +162,7 @@ private:
 	ofColor _fontColor;
 	ofTrueTypeFont _font;
 	ofPoint _stimulusCenter;
-	bool _isShowing;
+	bool _isPlaying;
 	ofSoundPlayer _mySound;
 
 	void _setup();
@@ -238,8 +240,10 @@ public:
 	*/
 	int updateStimulus();
 
-	
 	//Stimulus getCurrentStimulus();
+
+	ofEvent<Stimulus> stimulusPlay;
+	ofEvent<Stimulus> stimulusStop;
 };
 
 #endif

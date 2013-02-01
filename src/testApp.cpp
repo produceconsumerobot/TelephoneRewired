@@ -2,6 +2,7 @@
 
 //--------------------------------------------------------------
 void testApp::setup() {
+	myResetElapsedTimeCounter();
 
 	// **** COMPUTER SPECIFIC VARIABLES **** //
 
@@ -26,18 +27,19 @@ void testApp::setup() {
 
 	// **** END COMPUTER SPECIFIC VARIABLES **** //
 
+	vLogFormat = 1; // Log format specifier
 	logger.setDirPath(logDirPath);
 
 	// **** OPTIONS **** //
 
 	// Variables to control output functionality
 	showStimuli = true;
-	showOscilloscope = false;
+	showOscilloscope = true;
 	showScreenEntrainment = false;
 	showLedEntrainment = true;
 	playMidi = true;
 	logData = true;
-	readEEG = false;
+	readEEG = true;
 
 	//Setup entrainment data listeners
 	ofAddListener(freqOutThread.outputChanged, this, &testApp::entrainmentOutChange);
@@ -105,6 +107,8 @@ void testApp::setup() {
 		//stimulusPlayer = StimulusPlayer("data/stimuli/");
 		stimulusPlayer.loadStimuli("data/stimuli/form1.txt", "stimuli/sounds/form4/");
 		stimulusPlayer.setTimes(0.5, 0.5, 0.2);
+		ofAddListener(stimulusPlayer.stimulusPlay, this, &testApp::stimulusPlay);
+		ofAddListener(stimulusPlayer.stimulusStop, this, &testApp::stimulusStop);
 		//stimulusPlayer.randomizeStimuli();
 	}
 
@@ -180,11 +184,40 @@ void testApp::SetupOscilloscopes(){
 }
 
 //--------------------------------------------------------------
+// Callback function to log stimulus ON events
+void testApp::stimulusPlay(Stimulus & stimulus) {
+	if (logData) {
+		if (logger.isThreadRunning()) logger.lock();
+		std::stringstream ss;
+		ss << myGetElapsedTimeMillis() << "," << vLogFormat << "," << "SP," << stimulus.str() << ",\n";
+		logger.loggerQueue.push(ss.str());
+		//logger.push_back(myGetElapsedTimeMillis(), LoggerData::STIMULUS_PLAY, stimulus.logPrint());
+		if (logger.isThreadRunning()) logger.unlock();
+	}
+}
+
+//--------------------------------------------------------------
+// Callback function to log stimulus OFF events
+void testApp::stimulusStop(Stimulus & stimulus) {
+	if (logData) {
+		if (logger.isThreadRunning()) logger.lock();
+		std::stringstream ss;
+		ss << myGetElapsedTimeMillis() << "," << vLogFormat << ","  << "SS," << stimulus.str() << ",\n";
+		logger.loggerQueue.push(ss.str());
+		//logger.push_back(myGetElapsedTimeMillis(), LoggerData::STIMULUS_STOP, stimulus.logPrint());
+		if (logger.isThreadRunning()) logger.unlock();
+	}
+}
+
+//--------------------------------------------------------------
 // Callback function to log changes in entrainment on/off state
 void testApp::entrainmentOutChange(bool & output) {
 	if (logData) {
 		if (logger.isThreadRunning()) logger.lock();
-		logger.push_back(myGetElapsedTimeMillis(), LoggerData::IS_ENTRAINMENT_ON, output);
+		std::stringstream ss;
+		ss << myGetElapsedTimeMillis() << "," << vLogFormat << ","  << "EO," << (output ? "1":"0") << ",\n";
+		logger.loggerQueue.push(ss.str());
+		//logger.push_back(myGetElapsedTimeMillis(), LoggerData::STIMULUS_STOP, output);
 		if (logger.isThreadRunning()) logger.unlock();
 	}
 }
@@ -194,7 +227,10 @@ void testApp::entrainmentOutChange(bool & output) {
 void testApp::entrainmentFreqChange(float & freq) {
 	if (logData) {
 		if (logger.isThreadRunning()) logger.lock();
-		logger.push_back(myGetElapsedTimeMillis(), LoggerData::ENTRAINMENT_FREQ, freq);
+		std::stringstream ss;
+		ss << myGetElapsedTimeMillis() << "," << vLogFormat << ","  << "EF," <<  fixed << setprecision(3) << freq  << ",\n";
+		logger.loggerQueue.push(ss.str());
+		//logger.push_back(myGetElapsedTimeMillis(), LoggerData::ENTRAINMENT_FREQ, freq);
 		if (logger.isThreadRunning()) logger.unlock();
 	}
 }
@@ -243,7 +279,10 @@ void testApp::newZeoRawData(bool & ready){
 	// Log data
 	if (logData) {
 		logger.lock();
-		logger.push_back(myGetElapsedTimeMillis(), LoggerData::RAW_DATA, zeoRawData.at(0));
+		std::stringstream ss;
+		ss << myGetElapsedTimeMillis() << "," << vLogFormat << ","  << "RD," << strVectorF(zeoRawData.at(0)) << "\n";
+		logger.loggerQueue.push(ss.str());
+		//logger.push_back(myGetElapsedTimeMillis(), LoggerData::RAW_DATA, zeoRawData.at(0));
 		logger.unlock();
 	}
 }
@@ -282,7 +321,10 @@ void testApp::newZeoSliceData(bool & ready){
 
 	if (logData) {
 		logger.lock();
-		logger.push_back(myGetElapsedTimeMillis(), LoggerData::SLICE_DATA, zeoSlice);
+		std::stringstream ss;
+		ss << myGetElapsedTimeMillis() << "," << vLogFormat << "," << "SD," << zeoSlice.str() << ",\n";
+		logger.loggerQueue.push(ss.str());
+		//logger.push_back(myGetElapsedTimeMillis(), LoggerData::SLICE_DATA, zeoSlice);
 		logger.unlock();
 	}
 
@@ -440,8 +482,14 @@ void testApp::keyReleased(int key){
 			unsigned long l = ll;
 
 			logger.lock();
-			logger.push_back(myGetElapsedTimeMillis(), LoggerData::PARTICIPANT_NUMBER, participantNumber);
-			logger.push_back(myGetElapsedTimeMillis(), LoggerData::PARTICIPANT_ID, participantID);
+			std::stringstream ss;
+			ss << myGetElapsedTimeMillis() << "," << vLogFormat << ","  << "PN," << participantNumber << ",\n";
+			logger.loggerQueue.push(ss.str());
+			std::stringstream ss2;
+			ss2 << myGetElapsedTimeMillis() << "," << vLogFormat << "," << "ID," << participantNumber << ",\n";
+			logger.loggerQueue.push(ss2.str());
+			//logger.push_back(myGetElapsedTimeMillis(), LoggerData::PARTICIPANT_NUMBER, participantNumber);
+			//logger.push_back(myGetElapsedTimeMillis(), LoggerData::PARTICIPANT_ID, participantID);
 			logger.unlock();
 			if (participantNumber % 2) { 
 				stimulusPlayer.loadStimuli("data/stimuli/text/form4.txt", "stimuli/audio/form1/");

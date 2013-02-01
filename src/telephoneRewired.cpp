@@ -24,8 +24,8 @@ FreqOutThread::FreqOutThread() {
 	_outputDelay = 0.0;
 	_nFreqs = 0;
 	_freqIterator = -1;
-	_currentFreqStartTime = ofGetElapsedTimeMillis();
-	_currentOutputStartTime = ofGetElapsedTimeMillis();
+	_currentFreqStartTime = myGetElapsedTimeMillis();
+	_currentOutputStartTime = myGetElapsedTimeMillis();
 	_sendMidi = true;
 	_printOut = OUTPUT_DELAYS;
 
@@ -457,17 +457,18 @@ void FreqOutThread::update() {
 #endif
 	if (_getCurrentDuration() > -1) {
 
-		unsigned long long startTime;
+		unsigned long startTime;
 		
 		if (debuggingRollover) { // If we're debugging rollover
 			startTime = _testTimeRollOver(); // Used to test ElapseTime rollover
 		} else {
-			startTime = ofGetElapsedTimeMillis();  // Used to calculate loop lag
+			startTime = myGetElapsedTimeMillis();  // Used to calculate loop lag
 		}
 
+		/* THIS ISN'T NEEDED BECAUSE WE'RE CASTING myGetElapsedTimeMillis() to an unsigned long
+		unsigned long diffTime = startTime - _currentOutputStartTime;
 		float startTimeF = (float) startTime;
 		float _currentOutputStartTimeF = (float) _currentOutputStartTime;
-
 		// Check for rollover of ofGetElapsedTime
 		if ((startTimeF - _currentOutputStartTimeF) < 0) {
 			//debugOfGetElapsedTimef();
@@ -477,12 +478,13 @@ void FreqOutThread::update() {
 				startTime = _testTimeRollOver();
 			} else {
 				void ofResetElapsedTimeCounter();
-				startTime = ofGetElapsedTimeMillis();
+				startTime = myGetElapsedTimeMillis();
 			}
 
 			_currentOutputStartTime = startTime;
 			_currentFreqStartTime = startTime;
 		}
+		*/
 
 		if ((startTime - _currentOutputStartTime) >= (_outputDelay * 1000)) {
 			float outDelay = _outputDelay - ((startTime - _currentOutputStartTime) / 1000.);
@@ -518,7 +520,7 @@ void FreqOutThread::update() {
 
 			if (_printOut & LOOP_DELAYS) {
 				cout << fixed << setprecision(4) << "out: Freq=" << _getCurrentFreq() << ", Delay=" << (unsigned long)(_outputDelay*1000) << ", " 
-				<< (_output?"true":"false") << " - " << ofGetElapsedTimeMillis() << "\n";
+				<< (_output?"true":"false") << " - " << myGetElapsedTimeMillis() << "\n";
 				//printf("out: Freq=%f, Delay=%f, %s - %f\n", _getCurrentFreq(), _outputDelay, _output?"true":"false", ofGetElapsedTimef());
 			}
 			if (_printOut & LOOP_DELAYS) {
@@ -550,9 +552,9 @@ void FreqOutThread::threadedFunction() {
 	}
 }
 
-unsigned long long FreqOutThread::_testTimeRollOver() {
+unsigned long FreqOutThread::_testTimeRollOver() {
 	timeRolloverTest++;
-	unsigned long long temp = timeRolloverTest - startRolloverTest;
+	unsigned long temp = timeRolloverTest - startRolloverTest;
 	//cout << "s:" << startRolloverTest << ", c=" << timeRolloverTest << ", t=" << temp << "\n";
 	return temp; 
 }
@@ -570,7 +572,7 @@ void FreqOutThread::debugOfGetElapsedTimef() {
 
 				unsigned long long etu1 = ofGetElapsedTimeMicros();
 				cout << "etu1=" << etu1 << "\n";
-				unsigned long long etm1 = ofGetElapsedTimeMillis();
+				unsigned long long etm1 = myGetElapsedTimeMillis();
 				cout << "etm1=" << etm1 << "\n";
 				unsigned long long st1 = ofGetSystemTime();
 				cout << "st1=" << st1 << "\n";
@@ -603,7 +605,7 @@ void FreqOutThread::debugOfGetElapsedTimef() {
 				cout << "pts2=" << pts2 << "\n";
 				unsigned long long etu2 = ofGetElapsedTimeMicros();
 				cout << "etu2=" << etu2 << "\n";
-				unsigned long long etm2 = ofGetElapsedTimeMillis();
+				unsigned long long etm2 = myGetElapsedTimeMillis();
 				cout << "etm2=" << etm2 << "\n";
 				unsigned long long st2 = ofGetSystemTime();
 				cout << "st2=" << st2 << "\n";
@@ -724,7 +726,7 @@ void Stimulus::_setup()
 	_font.loadFont("verdana.ttf", 80, true, true);
 	_fontColor = ofColor(0,220,0);
 	_stimulusCenter = ofPoint(ofGetWindowWidth()/2, ofGetWindowHeight()/2);
-	_isShowing = false;
+	_isPlaying = false;
 }
 
 void Stimulus::playStimulus() 
@@ -734,7 +736,7 @@ void Stimulus::playStimulus()
 	switch (_type) {
 	case Sound:
 		// play sound
-		if (!_isShowing) {
+		if (!_isPlaying) {
 			//ofSoundPlayer _mySound;
 			_mySound.loadSound(_data); //DOCUMENTATION PAGE EXAMPLE IS WRONG
 			_mySound.setVolume(0.95f);
@@ -761,13 +763,36 @@ void Stimulus::playStimulus()
 		break;
 	}
 
-	_isShowing = true;
+	_isPlaying = true;
 }
 
 void Stimulus::stopStimulus() 
 {
-	_isShowing = false;
+	_isPlaying = false;
 }
+
+bool Stimulus::isPlaying()
+{
+	return _isPlaying;
+}
+
+string Stimulus::str()
+{
+	string s;
+	switch(_type) 
+	{
+	case types::Sound:
+		s = "Sound";
+		break;
+	case types::Text:
+		s = "Text";
+		break;
+	default:
+		s = "None";
+	}
+	return s + "," + _data;
+}
+
 
 StimulusPlayer::StimulusPlayer() {
 	//loadStimuli("/stimuli/");
@@ -882,6 +907,9 @@ int StimulusPlayer::updateStimulus() {
 
 					// Stop current stimulus
 					_stimulusCycle.at(_stimulusIterator).stopStimulus();
+					// Callback to main code for logging
+					Stimulus s = _stimulusCycle.at(_stimulusIterator);
+					ofNotifyEvent(stimulusStop, s, this);
 
 					// iterate stimulus
 					_stimulusIterator++;
@@ -897,6 +925,15 @@ int StimulusPlayer::updateStimulus() {
 					}
 
 			} else { // If interstimulus delay NOT exceeded
+
+				// If we we're not currently showing a stimlus
+				if (!_stimulusCycle.at(_stimulusIterator).isPlaying()) {
+					// We're turning on a stimulus
+					// Callback to main code for logging
+					Stimulus s = _stimulusCycle.at(_stimulusIterator);
+					ofNotifyEvent(stimulusPlay, s, this);
+				}
+
 				// Show stimulus
 				_stimulusCycle.at(_stimulusIterator).playStimulus();
 			}
