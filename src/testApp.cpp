@@ -36,8 +36,8 @@ void testApp::setup() {
 	showScreenEntrainment = false;
 	showLedEntrainment = true;
 	playMidi = true;
-	logData = false;
-	readEEG = true;
+	logData = true;
+	readEEG = false;
 
 	//Setup entrainment data listeners
 	ofAddListener(freqOutThread.outputChanged, this, &testApp::entrainmentOutChange);
@@ -108,7 +108,7 @@ void testApp::setup() {
 		//stimulusPlayer.randomizeStimuli();
 	}
 
-	participantID = 0;
+	participantNumber = 0;
 	
 	// **** Start threads **** //
 	// DO THIS LAST OR YOU NEED TO LOCK() ON SETUP FUNCTIONS
@@ -129,7 +129,7 @@ void testApp::setup() {
 		logger.startThread(true, false);
 	}
 
-	drawTime = ofGetElapsedTimef();
+	drawTime = myGetElapsedTimeMillis();
 }
 
 //--------------------------------------------------------------
@@ -184,7 +184,7 @@ void testApp::SetupOscilloscopes(){
 void testApp::entrainmentOutChange(bool & output) {
 	if (logData) {
 		if (logger.isThreadRunning()) logger.lock();
-		logger.push_back(ofGetElapsedTimef(), LoggerData::IS_ENTRAINMENT_ON, output);
+		logger.push_back(myGetElapsedTimeMillis(), LoggerData::IS_ENTRAINMENT_ON, output);
 		if (logger.isThreadRunning()) logger.unlock();
 	}
 }
@@ -194,7 +194,7 @@ void testApp::entrainmentOutChange(bool & output) {
 void testApp::entrainmentFreqChange(float & freq) {
 	if (logData) {
 		if (logger.isThreadRunning()) logger.lock();
-		logger.push_back(ofGetElapsedTimef(), LoggerData::ENTRAINMENT_FREQ, freq);
+		logger.push_back(myGetElapsedTimeMillis(), LoggerData::ENTRAINMENT_FREQ, freq);
 		if (logger.isThreadRunning()) logger.unlock();
 	}
 }
@@ -243,7 +243,7 @@ void testApp::newZeoRawData(bool & ready){
 	// Log data
 	if (logData) {
 		logger.lock();
-		logger.push_back(ofGetElapsedTimef(), LoggerData::RAW_DATA, zeoRawData.at(0));
+		logger.push_back(myGetElapsedTimeMillis(), LoggerData::RAW_DATA, zeoRawData.at(0));
 		logger.unlock();
 	}
 }
@@ -282,7 +282,7 @@ void testApp::newZeoSliceData(bool & ready){
 
 	if (logData) {
 		logger.lock();
-		logger.push_back(ofGetElapsedTimef(), LoggerData::SLICE_DATA, zeoSlice);
+		logger.push_back(myGetElapsedTimeMillis(), LoggerData::SLICE_DATA, zeoSlice);
 		logger.unlock();
 	}
 
@@ -343,8 +343,8 @@ void testApp::draw(){
 		freqOutThread.unlock();
 
 		logger.lock();
-		logger.push_back(ofGetElapsedTimef(), LoggerData::IS_ENTRAINMENT_ON, outOn);
-		logger.push_back(ofGetElapsedTimef(), LoggerData::ENTRAINMENT_FREQ, freq);
+		logger.push_back(myGetElapsedTimeMillis(), LoggerData::IS_ENTRAINMENT_ON, outOn);
+		logger.push_back(myGetElapsedTimeMillis(), LoggerData::ENTRAINMENT_FREQ, freq);
 		logger.unlock();
 	}
 	*/
@@ -369,8 +369,8 @@ void testApp::draw(){
 			scopeWin.plot();
 	}
 
-	//cout << "time=" << ofGetElapsedTimef() << ", diff=" << ofGetElapsedTimef() - drawTime << "\n";
-	//drawTime = ofGetElapsedTimef();
+	//cout << "time=" << myGetElapsedTimeMillis() << ", diff=" << myGetElapsedTimeMillis() - drawTime << "\n";
+	//drawTime = myGetElapsedTimeMillis();
 }
 
 //--------------------------------------------------------------
@@ -430,8 +430,20 @@ void testApp::keyReleased(int key){
 	if ( key == 's') {
 		if (showStimuli) {
 			//stimulusPlayer.randomizeStimuli();
-			participantID++;
-			if (participantID % 2) { 
+			participantNumber++;
+			//unsigned long participantID = (participantNumber ^ 2999975935);
+			unsigned long participantID = (participantNumber ^ 313717);
+			unsigned long participantID2 = (participantNumber ^ 0);
+			unsigned long temp = (participantID ^ 313717);
+			
+			unsigned long long ll = 4294967297;
+			unsigned long l = ll;
+
+			logger.lock();
+			logger.push_back(myGetElapsedTimeMillis(), LoggerData::PARTICIPANT_NUMBER, participantNumber);
+			logger.push_back(myGetElapsedTimeMillis(), LoggerData::PARTICIPANT_ID, participantID);
+			logger.unlock();
+			if (participantNumber % 2) { 
 				stimulusPlayer.loadStimuli("data/stimuli/text/form4.txt", "stimuli/audio/form1/");
 			} else {
 				stimulusPlayer.loadStimuli("data/stimuli/text/form1.txt", "stimuli/audio/form4/");

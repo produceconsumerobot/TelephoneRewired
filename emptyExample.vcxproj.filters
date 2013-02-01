@@ -128,5 +128,8 @@
     <ClInclude Include="src\brainTrainment.h">
       <Filter>src</Filter>
     </ClInclude>
+    <ClInclude Include="src\myUtils.h">
+      <Filter>src</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

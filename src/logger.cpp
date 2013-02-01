@@ -20,18 +20,18 @@ LoggerData::LoggerData() {
 	_dataTypeTag = "-1";
 	_dataPayload = NULL;
 }
-LoggerData::LoggerData(float ofTimestamp, string dataTypeTag) {
+LoggerData::LoggerData(unsigned long long ofTimestamp, string dataTypeTag) {
 	_ofTimestamp = ofTimestamp;
 	_dataTypeTag = dataTypeTag;
 	_dataPayload = NULL;
 }
 
-LoggerData::LoggerData(float ofTimestamp, string dataTypeTag, void * payload) {
+LoggerData::LoggerData(unsigned long long ofTimestamp, string dataTypeTag, void * payload) {
 	_ofTimestamp = ofTimestamp;
 	_dataTypeTag = dataTypeTag;
 	_dataPayload = payload;
 }
-float LoggerData::getTimeStamp() {
+unsigned long long LoggerData::getTimeStamp() {
 	return _ofTimestamp;
 }
 string LoggerData::getTypeTag() {
@@ -42,18 +42,19 @@ void * LoggerData::getPayload() {
 }
 
 const int LoggerData::VERSION = 1;
-const string LoggerData::RAW_DATA = "RD";
-const string LoggerData::SLICE_DATA = "SD";
-const string LoggerData::IS_ENTRAINMENT_ON = "EO";
-const string LoggerData::ENTRAINMENT_FREQ = "EF";
-
+const string LoggerData::RAW_DATA =				"RD";
+const string LoggerData::SLICE_DATA =			"SD";
+const string LoggerData::IS_ENTRAINMENT_ON =	"EO";
+const string LoggerData::ENTRAINMENT_FREQ =		"EF";
+const string LoggerData::PARTICIPANT_NUMBER =	"PN";
+const string LoggerData::PARTICIPANT_ID =		"ID";
 
 // ------------------------------------------------------- 
 // LoggerThread()
 // -------------------------------------------------------
 LoggerThread::LoggerThread() {
 	_logDirPath = "../../LogData/";
-	_fileName = fileDateTimeString(ofGetElapsedTimef());
+	_fileName = fileDateTimeString(ofGetElapsedTimeMillis());
 }
 LoggerThread::LoggerThread(string logDirPath) {
 	_logDirPath = logDirPath;
@@ -74,10 +75,10 @@ LoggerThread::~LoggerThread() {
 }
 
 void LoggerThread::setDirPath(string logDirPath) {
-	_fileName = fileDateTimeString(ofGetElapsedTimef());
+	_fileName = fileDateTimeString(ofGetElapsedTimeMillis());
 }
 
-string LoggerThread::fileDateTimeString(float ofTime)
+string LoggerThread::fileDateTimeString(unsigned long long ofTime)
 {
     string output = "";
     
@@ -99,13 +100,13 @@ string LoggerThread::fileDateTimeString(float ofTime)
     output = output + ofToString(minutes) + ".";
     if (seconds < 10) output = output + "0";
     output = output + ofToString(seconds) + ", ";
-    output = output + ofToString(ofTime, 3);
+    output = output + ofToString(ofTime - (ofTime / 1000));
     
     return output;
 }
 
 
-void LoggerThread::push_back(float ofTimestamp, string dataTypeTag, std::vector<float> payload) {
+void LoggerThread::push_back(unsigned long long ofTimestamp, string dataTypeTag, std::vector<float> payload) {
 	void * dataPayload;
 
 	if (dataTypeTag.compare(LoggerData::RAW_DATA) == 0) {
@@ -124,7 +125,7 @@ void LoggerThread::push_back(float ofTimestamp, string dataTypeTag, std::vector<
 	_loggerQueue.push(LoggerData(ofTimestamp, dataTypeTag, dataPayload));
 }
 
-void LoggerThread::push_back(float ofTimestamp, string dataTypeTag, ZeoSlice payload) {
+void LoggerThread::push_back(unsigned long long ofTimestamp, string dataTypeTag, ZeoSlice payload) {
 	void * dataPayload;
 
 	if (dataTypeTag.compare(LoggerData::SLICE_DATA) == 0) {
@@ -139,7 +140,7 @@ void LoggerThread::push_back(float ofTimestamp, string dataTypeTag, ZeoSlice pay
 	_loggerQueue.push(LoggerData(ofTimestamp, dataTypeTag, dataPayload));
 }
 
-void LoggerThread::push_back(float ofTimestamp, string dataTypeTag, float payload) {
+void LoggerThread::push_back(unsigned long long ofTimestamp, string dataTypeTag, float payload) {
 	void * dataPayload;
 
 	if (dataTypeTag.compare(LoggerData::ENTRAINMENT_FREQ) == 0) {
@@ -154,7 +155,25 @@ void LoggerThread::push_back(float ofTimestamp, string dataTypeTag, float payloa
 	_loggerQueue.push(LoggerData(ofTimestamp, dataTypeTag, dataPayload));
 }
 
-void LoggerThread::push_back(float ofTimestamp, string dataTypeTag, bool payload) {
+void LoggerThread::push_back(unsigned long long ofTimestamp, string dataTypeTag, unsigned long payload) {
+	void * dataPayload;
+
+	if ((dataTypeTag.compare(LoggerData::PARTICIPANT_NUMBER) == 0)
+		|| (dataTypeTag.compare(LoggerData::PARTICIPANT_ID) == 0))
+	{
+		unsigned long * data = new unsigned long;
+		*data = payload;
+		dataPayload = data;
+	} else {
+		fprintf(stderr, "ERROR type mismatch between inputs unsigned long and %s\n", dataTypeTag.c_str());
+		return;
+	}
+
+	_loggerQueue.push(LoggerData(ofTimestamp, dataTypeTag, dataPayload));
+}
+
+
+void LoggerThread::push_back(unsigned long long ofTimestamp, string dataTypeTag, bool payload) {
 	void * dataPayload;
 
 	if (dataTypeTag.compare(LoggerData::IS_ENTRAINMENT_ON) == 0) {
@@ -187,9 +206,16 @@ void LoggerThread::pop_front() {
 			bool* temp = (bool*) data.getPayload();
 			if (temp != NULL) 
 				delete temp;
-
+			
 		} else if (data.getTypeTag().compare(LoggerData::ENTRAINMENT_FREQ) == 0){
 			float* temp = (float*) data.getPayload();
+			if (temp != NULL) 
+				delete temp;
+
+		} else if ((data.getTypeTag().compare(LoggerData::PARTICIPANT_NUMBER) == 0)
+			|| (data.getTypeTag().compare(LoggerData::PARTICIPANT_ID) == 0))
+		{
+			unsigned long* temp = (unsigned long*) data.getPayload();
 			if (temp != NULL) 
 				delete temp;
 
@@ -211,8 +237,9 @@ void LoggerThread::log(LoggerData data) {
     
     ofstream mFile;
     mFile.open(fileName.c_str(), ios::out | ios::app);
-	mFile.precision(3);
-	mFile << fixed << data.getTimeStamp() << ",";
+	//mFile.precision(3);
+	//mFile << fixed << data.getTimeStamp() << ",";
+	mFile << data.getTimeStamp() << ",";
 	mFile << fixed << LoggerData::VERSION << ",";
 	mFile << data.getTypeTag() << ",";
 
@@ -246,6 +273,13 @@ void LoggerThread::log(LoggerData data) {
 		// write entrainment frequency
 		mFile.precision(3);
 		float * temp = (float *) data.getPayload();
+		mFile << fixed << (*temp) << ",";
+
+	} else if ((data.getTypeTag().compare(LoggerData::PARTICIPANT_NUMBER) == 0)
+		|| (data.getTypeTag().compare(LoggerData::PARTICIPANT_ID) == 0))
+	{
+		// write new participant
+		unsigned long * temp = (unsigned long *) data.getPayload();
 		mFile << fixed << (*temp) << ",";
 
 	} else {

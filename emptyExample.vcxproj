@@ -130,6 +130,7 @@
     <ClInclude Include="..\..\..\addons\zeoParser\src\zeoParser.h" />
     <ClInclude Include="src\brainTrainment.h" />
     <ClInclude Include="src\logger.h" />
+    <ClInclude Include="src\myUtils.h" />
     <ClInclude Include="src\telephoneRewired.h" />
     <ClInclude Include="src\testApp.h" />
   </ItemGroup>

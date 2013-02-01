@@ -20,7 +20,7 @@
 
 class LoggerData {
 private:
-	float	_ofTimestamp;
+	unsigned long long	_ofTimestamp;
 	string	_dataTypeTag;
 	void *	_dataPayload;
 public:
@@ -29,12 +29,14 @@ public:
 	static const string SLICE_DATA;
 	static const string IS_ENTRAINMENT_ON;
 	static const string ENTRAINMENT_FREQ;
+	static const string PARTICIPANT_NUMBER;
+	static const string PARTICIPANT_ID;
 
 	LoggerData();
-	LoggerData(float ofTimestamp, string dataTypeTag);
-	LoggerData(float ofTimestamp, string dataTypeTag, void * payload);
+	LoggerData(unsigned long long ofTimestamp, string dataTypeTag);
+	LoggerData(unsigned long long ofTimestamp, string dataTypeTag, void * payload);
 
-	float getTimeStamp();
+	unsigned long long getTimeStamp();
 	string getTypeTag();
 	void * getPayload();
 };
@@ -73,14 +75,15 @@ public:
 	~LoggerThread();
 	LoggerThread(string logDirPath);
 	void setDirPath(string logDirPath);
-	string fileDateTimeString(float ofTime);
+	string fileDateTimeString(unsigned long long ofTime);
 	//void push(float ofTimestamp, string dataTypeTag, std::vector<float> payload);
 	//void push_back(float ofTimestamp, string dataTypeTag, void * payload);
 	//void push_back(LoggerData data);
-	void push_back(float ofTimestamp, string dataTypeTag, std::vector<float> payload);
-	void push_back(float ofTimestamp, string dataTypeTag, ZeoSlice payload);
-	void push_back(float ofTimestamp, string dataTypeTag, float payload);
-	void push_back(float ofTimestamp, string dataTypeTag, bool payload);
+	void push_back(unsigned long long ofTimestamp, string dataTypeTag, std::vector<float> payload);
+	void push_back(unsigned long long ofTimestamp, string dataTypeTag, ZeoSlice payload);
+	void push_back(unsigned long long ofTimestamp, string dataTypeTag, float payload);
+	void push_back(unsigned long long ofTimestamp, string dataTypeTag, unsigned long payload);
+	void push_back(unsigned long long ofTimestamp, string dataTypeTag, bool payload);
 	void log_front();
 	void pop_front();
 	void threadedFunction();

@@ -721,7 +721,7 @@ Stimulus::Stimulus(types type, string data)
 
 void Stimulus::_setup() 
 {
-	_font.loadFont("verdana.ttf", 60, true, true);
+	_font.loadFont("verdana.ttf", 80, true, true);
 	_fontColor = ofColor(0,220,0);
 	_stimulusCenter = ofPoint(ofGetWindowWidth()/2, ofGetWindowHeight()/2);
 	_isShowing = false;
@@ -729,13 +729,15 @@ void Stimulus::_setup()
 
 void Stimulus::playStimulus() 
 {
+	ofRectangle bounds;
+
 	switch (_type) {
 	case Sound:
 		// play sound
 		if (!_isShowing) {
 			//ofSoundPlayer _mySound;
 			_mySound.loadSound(_data); //DOCUMENTATION PAGE EXAMPLE IS WRONG
-			_mySound.setVolume(0.85f);
+			_mySound.setVolume(0.95f);
 			_mySound.play();
 		}
 
@@ -743,8 +745,15 @@ void Stimulus::playStimulus()
 		break;
 	case Text:
 		// show text
-		ofSetColor(_fontColor);
-		_font.drawString(_data, _stimulusCenter.x, _stimulusCenter.y);
+		
+		ofPushMatrix();
+		ofPushStyle();
+			bounds = _font.getStringBoundingBox(_data, 0, 0);
+			ofTranslate(-bounds.width/2, bounds.height / 2, 0);
+			ofSetColor(_fontColor);
+			_font.drawString(_data, _stimulusCenter.x, _stimulusCenter.y);
+		ofPopStyle();
+		ofPopMatrix();
 
 		//cout << "showing text \n";
 		break;
@@ -794,10 +803,6 @@ int StimulusPlayer::loadStimuli(string textFilePath, string soundDirPath)
 	//string t = ofToDataPath(soundDirPath);
 	//ofDirectory dir1(ofToDataPath(soundDirPath)); // REPORT BUG
 	ofDirectory dir(soundDirPath);
-	//dir1.listDir();
-	//string p = dir.getPath();
-	//string a = dir.getAbsolutePath();
-	//string a1 = dir1.getAbsolutePath();
 	if (dir.exists()) {
 		dir.allowExt("mp3");
 		dir.listDir();
@@ -807,7 +812,6 @@ int StimulusPlayer::loadStimuli(string textFilePath, string soundDirPath)
 	}
 
 	// Load Text
-	//string filePath = path + "text.txt";
 	std::vector<Stimulus> text;
 	ofFile file(ofToDataPath(textFilePath));
 	if (file.exists() && file.canRead()) {
@@ -838,10 +842,7 @@ int StimulusPlayer::loadStimuli(string textFilePath, string soundDirPath)
 	return 0;
 }
 
-void StimulusPlayer::setTimes(
-	float stimulusOnTime, 
-	float interStimulusBaseDelayTime, 
-	float interStimulusRandDelayTime) 
+void StimulusPlayer::setTimes(float stimulusOnTime, float interStimulusBaseDelayTime, float interStimulusRandDelayTime) 
 {
 	_stimulusOnTime = stimulusOnTime * 1000;
 	_interStimulusBaseDelayTime = interStimulusBaseDelayTime * 1000;
@@ -852,7 +853,7 @@ void StimulusPlayer::start() {
 	_stimulusCycleOn = true;
 	_stimulusIterator = 0;
 	_currentStimulusDelayTime = _interStimulusBaseDelayTime + ((unsigned long) ofRandom(0, _interStimulusRandDelayTime));
-	_currentStimulusTimerStart = ofGetElapsedTimeMillis();
+	_currentStimulusTimerStart = myGetElapsedTimeMillis();
 }
 
 void StimulusPlayer::randomizeStimuli()
@@ -870,7 +871,7 @@ int StimulusPlayer::updateStimulus() {
 			return _nStimuliToShow - _stimulusIterator;
 		}
 
-		unsigned long long currentTime = ofGetElapsedTimeMillis();
+		unsigned long currentTime = myGetElapsedTimeMillis();
 
 		// If interstimulus delay exceeded
 		if ((currentTime - _currentStimulusTimerStart) > _currentStimulusDelayTime) {
@@ -887,7 +888,7 @@ int StimulusPlayer::updateStimulus() {
 					
 					// Recalculate the stimulus ON time (with randomness)
 					_currentStimulusDelayTime = _interStimulusBaseDelayTime + ((unsigned long) ofRandom(0, _interStimulusRandDelayTime));
-					_currentStimulusTimerStart = ofGetElapsedTimeMillis();
+					_currentStimulusTimerStart = myGetElapsedTimeMillis();
 
 					// If we reached the number of stimuli to show
 					if (_stimulusIterator >= _nStimuliToShow) {
@@ -905,4 +906,5 @@ int StimulusPlayer::updateStimulus() {
 	}
 	return 0;
 }
+
 

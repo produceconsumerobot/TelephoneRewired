@@ -9,6 +9,7 @@
 #include "brainTrainment.h"
 #include "ofxOscilloscope.h"
 #include "logger.h"
+#include "myUtils.h"
 
 class testApp : public ofBaseApp{
 	public:
@@ -42,7 +43,7 @@ class testApp : public ofBaseApp{
 		// Player to show stimuli
 		StimulusPlayer stimulusPlayer;
 
-		long participantID;
+		unsigned long participantNumber;
 
 		float drawTime;
 

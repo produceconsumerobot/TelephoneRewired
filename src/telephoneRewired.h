@@ -20,6 +20,8 @@
 #include "ofMain.h"
 #include "ofxMidi.h"
 
+#include "myUtils.h"
+
 #include "zeoParser.h"
 
 #include "Poco/LocalDateTime.h"
@@ -172,7 +174,7 @@ private:
 	bool _stimulusCycleOn;
 
 	// Stimulus timing varaiables (in milliseconds)
-	unsigned long long _currentStimulusTimerStart;
+	unsigned long _currentStimulusTimerStart;
 	unsigned long _stimulusOnTime;
 	unsigned long _currentStimulusDelayTime;
 	unsigned long _interStimulusBaseDelayTime;
