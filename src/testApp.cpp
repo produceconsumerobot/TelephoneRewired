@@ -34,7 +34,7 @@ void testApp::setup() {
 
 	// Variables to control output functionality
 	showStimuli = true;
-	showOscilloscope = true;
+	showOscilloscope = false;
 	showScreenEntrainment = false;
 	showLedEntrainment = true;
 	playMidi = true;
@@ -411,8 +411,8 @@ void testApp::draw(){
 			scopeWin.plot();
 	}
 
-	//cout << "time=" << myGetElapsedTimeMillis() << ", diff=" << myGetElapsedTimeMillis() - drawTime << "\n";
-	//drawTime = myGetElapsedTimeMillis();
+	cout << "time=" << myGetElapsedTimeMillis() << ", diff=" << myGetElapsedTimeMillis() - drawTime << "\n";
+	drawTime = myGetElapsedTimeMillis();
 }
 
 //--------------------------------------------------------------

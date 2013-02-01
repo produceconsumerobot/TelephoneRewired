@@ -455,6 +455,7 @@ void FreqOutThread::update() {
 #ifdef DEBUG_PRINT 
 	printf("update()\n");
 #endif
+
 	if (_getCurrentDuration() > -1) {
 
 		unsigned long startTime;
@@ -539,6 +540,9 @@ void FreqOutThread::update() {
 	} else {
 		if (_printOut & LOOP_TIMES) printf("Duration = -1\n");
 	}
+
+	// Flush the Arduino buffer
+	_arduino.update();
 }
 
 void FreqOutThread::threadedFunction() {
@@ -727,6 +731,9 @@ void Stimulus::_setup()
 	_fontColor = ofColor(0,220,0);
 	_stimulusCenter = ofPoint(ofGetWindowWidth()/2, ofGetWindowHeight()/2);
 	_isPlaying = false;
+	//std::stringstream ss;
+	cout << types::Sound;
+	//cout << ss;
 }
 
 void Stimulus::playStimulus() 
@@ -821,33 +828,44 @@ void StimulusPlayer::_setup()
 
 int StimulusPlayer::loadStimuli(string textFilePath, string soundDirPath) 
 {
-	//cout << "StimulusPlayer::loadStimuli\n";
+	//cout << "StimulusPlayer::loadStimuli  " << myGetElapsedTimef() << "\n";
 
 	// Load sounds
 	std::vector<Stimulus> sounds;
 	//string t = ofToDataPath(soundDirPath);
 	//ofDirectory dir1(ofToDataPath(soundDirPath)); // REPORT BUG
 	ofDirectory dir(soundDirPath);
+	//cout << "StimulusPlayer::loadStimuli dir " << myGetElapsedTimef() << "\n";
 	if (dir.exists()) {
+		//cout << "StimulusPlayer::loadStimuli dir.exists() " << myGetElapsedTimef() << "\n";
 		dir.allowExt("mp3");
+		//cout << "StimulusPlayer::loadStimuli dir.allowExt(); " << myGetElapsedTimef() << "\n";
 		dir.listDir();
-		for (int i=0; i<dir.numFiles(); i++) {
+		//cout << "StimulusPlayer::loadStimuli dir.listDir(); " << myGetElapsedTimef() << "\n";
+		int n = dir.numFiles();
+		//cout << "StimulusPlayer::loadStimuli dir.numFiles(); " << myGetElapsedTimef() << "\n";
+		for (int i=0; i<n; i++) {
 			sounds.push_back(Stimulus(Stimulus::types::Sound, dir.getPath(i)));
+			//cout << "StimulusPlayer::loadStimuli dir.getPath " << myGetElapsedTimef() << "\n";
 		}
 	}
+	//cout << "StimulusPlayer::loadStimuli sounds loaded " << myGetElapsedTimef() << "\n";
+	dir.close();
 
 	// Load Text
 	std::vector<Stimulus> text;
 	ofFile file(ofToDataPath(textFilePath));
 	if (file.exists() && file.canRead()) {
-		ofBuffer buffer = ofBufferFromFile(textFilePath);
+		ofBuffer buffer = file.readToBuffer();
 		while (!buffer.isLastLine()) {
 			text.push_back(Stimulus(Stimulus::types::Text, buffer.getNextLine()));
 		}
 	}
+	//cout << "StimulusPlayer::loadStimuli text loaded " << myGetElapsedTimef() << "\n";
+	file.close();
 
 	_allStimuli.clear();
-
+	//cout << "StimulusPlayer::loadStimuli allStimuli cleared " << myGetElapsedTimef() << "\n";
 	// Create stimulus vector by interleaving sounds and text
 	if (text.size() != sounds.size()) {
 		fprintf(stderr, "Error StimulusPlayer::loadStimuli -- text.size() != sounds.size()");
@@ -858,12 +876,13 @@ int StimulusPlayer::loadStimuli(string textFilePath, string soundDirPath)
 			_allStimuli.push_back(text.at(i));
 		}
 	}
+	//cout << "StimulusPlayer::loadStimuli allStimuli pushed " << myGetElapsedTimef() << "\n";
 
 	_stimulusCycle = _allStimuli;
 	_nStimuliToShow = _stimulusCycle.size();
 	_stimulusIterator = _nStimuliToShow;
 
-	//cout << "END StimulusPlayer::loadStimuli\n";
+	//cout << "END StimulusPlayer::loadStimuli " << myGetElapsedTimef() << "\n";
 	return 0;
 }
 

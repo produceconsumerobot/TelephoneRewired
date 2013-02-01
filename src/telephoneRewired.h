@@ -246,4 +246,63 @@ public:
 	ofEvent<Stimulus> stimulusStop;
 };
 
+class InstructionsPlayer 
+{
+
+private:
+	const int _nPages = 3;
+	int _currentPage;
+
+	const float _timeoutDelay = 3.; // Seconds
+	unsigned long _lastButtonPressTime;
+
+public:
+	InstructionsPlayer();
+
+	/* 
+	** update()
+	**	ALGORITHM:
+	**		shows the appropriate text for the current page
+	**		checks for timeout since last button press.
+	*/
+	void update();
+
+	/* 
+	** buttonPressed()
+	**	ALGORITHM:
+	**		updates _lastButtonPressTime
+	**		initiates page change
+	*/
+	void buttonPressed();
+
+	void goToPage(int i);
+
+	ofEvent<int> newPage;
+};
+
+// Directs traffic of Experiment, what to show, when
+class ExperimentGovernor 
+{
+
+public:
+	static enum states {Instructions, StimulusPresentation};
+
+	ExperimentGovernor();
+
+	void update(); // Controls instructions/stimulus presentation
+	void buttonPressed(); // Input detected
+	states getState();
+	//void setInstructionsPlayer(InstructionsPlayer p);
+	void StimulusPlayer(StimulusPlayer p);
+
+	ofEvent<string> newState;
+
+	//void includeInstructions(bool b);
+	//void includeStimuli(bool b);
+private:
+	states _currentState;
+	//InstructionsPlayer _instructionsPlayer;
+	//StimulusPlayer _stimulusPlayer;
+};
+
 #endif
