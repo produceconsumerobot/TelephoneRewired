@@ -51,19 +51,19 @@ void testApp::setup() {
 	logData = true;
 
 	// Experiment Timing Variables
-	float stimulusOnTime =				.1;		// Seconds
-	float interStimulusBaseDelayTime =	0.3;	// Seconds
+	float stimulusOnTime =				.3;		// Seconds
+	float interStimulusBaseDelayTime =	1.;	// Seconds
 	float interStimulusRandDelayTime =	0.1;	// Seconds
-	float instructionsTimeoutDelay =	3.;		// Seconds
-	float congratulationsTime =			3.;	//Seconds
+	float instructionsTimeoutDelay =	10.;		// Seconds
+	float congratulationsTime =			15.;	//Seconds
 
 	//Setup entrainment data listeners
 	ofAddListener(freqOutThread.outputChanged, this, &testApp::entrainmentOutChange);
 	ofAddListener(freqOutThread.freqChanged, this, &testApp::entrainmentFreqChange);
 
 	// Set the brainwave entrainment frequencies cycle... see brainTrainment.h
-	freqOutThread.setFreqCycle(nENTRAINMENT_DEBUGGING2_SCREEN, ENTRAINMENT_DEBUGGING2_SCREEN);
-	//freqOutThread.setFreqCycle(nBRAIN_MACHINE, BRAIN_MACHINE);
+	//freqOutThread.setFreqCycle(nENTRAINMENT_DEBUGGING2_SCREEN, ENTRAINMENT_DEBUGGING2_SCREEN);
+	freqOutThread.setFreqCycle(nBRAIN_MACHINE, BRAIN_MACHINE);
 	//freqOutThread.setFreqCycle(nBRAIN_MACHINE_FAST, BRAIN_MACHINE_FAST);
 	
 	freqOutThread.printFreqCycle();
