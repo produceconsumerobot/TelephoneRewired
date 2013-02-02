@@ -7,7 +7,8 @@ void testApp::setup() {
 	// **** COMPUTER SPECIFIC VARIABLES **** //
 
 	// Arduino for outputing on LEDs
-	string ledArduinoPort = "\\\\.\\COM4"; // Sean, Windows, Uno
+	//string ledArduinoPort = "\\\\.\\COM4"; // Sean, Windows, Uno
+	string ledArduinoPort = "\\\\.\\COM7"; // Sean, Windows, Uno
 	//string ledArduinoPort = "tty.usbmodemfa141"; // Sean, Mac, Arduino Decimila
 	//string ledArduinoPort = "/dev/cu.usbserial-A70064Yu"; // Sean, Mac, Arduino Decimila
     //tty.usbmodemfa141
@@ -15,7 +16,8 @@ void testApp::setup() {
     //string ledArduinoPort = "tty.usbmodem1411"; //Mac
 
 	// Arduino for taking button press inputs
-	string inputArduinoPort = "\\\\.\\COM6";
+	//string inputArduinoPort = "\\\\.\\COM6";
+	string inputArduinoPort = "\\\\.\\COM8";
 
 	// Zeo Port
 	string zeoPort = "\\\\.\\COM5";
@@ -36,9 +38,9 @@ void testApp::setup() {
 	// **** OPTIONS **** //
 
 	// Variables to control output functionality
-	showInstructions = false;
+	checkButtonPresses = true; // requires Arduino
+	showInstructions = true;
 	showStimuli = true;
-	checkButtonPresses = false; // requires Arduino
 
 	showScreenEntrainment = false;
 	showLedEntrainment = true; // requires Arduino
@@ -47,6 +49,13 @@ void testApp::setup() {
 	readEEG = true; // requires Zeo
 	showOscilloscope = false; // sloooows down screen drawing
 	logData = true;
+
+	// Experiment Timing Variables
+	float stimulusOnTime =				.1;		// Seconds
+	float interStimulusBaseDelayTime =	0.3;	// Seconds
+	float interStimulusRandDelayTime =	0.1;	// Seconds
+	float instructionsTimeoutDelay =	3.;		// Seconds
+	float congratulationsTime =			3.;	//Seconds
 
 	//Setup entrainment data listeners
 	ofAddListener(freqOutThread.outputChanged, this, &testApp::entrainmentOutChange);
@@ -102,6 +111,37 @@ void testApp::setup() {
 	// Turn on/off zeo data printfs
 	printData = false;
 
+	// Setup experimentGovernor and Listeners
+	experimentGovernor = ExperimentGovernor();
+	ofAddListener(experimentGovernor.newState, this, &testApp::newExperimentState);
+	ofAddListener(experimentGovernor.newParticipant, this, &testApp::newParticipant);
+	experimentGovernor.setCongratulationsTime(congratulationsTime);
+
+	// Setup Instruction Player
+	if (showInstructions) {
+		instructionsPlayer = InstructionsPlayer(instructionsTimeoutDelay);
+		
+		// TODO: Setup Listeners
+		ofAddListener(instructionsPlayer.newPage, this, &testApp::newInstructionsPage);
+
+		experimentGovernor.setInstructionsPlayer(&instructionsPlayer);
+		experimentGovernor.nextState();
+	}
+
+	// Setup StimulusPlayer
+	if (showStimuli) {
+		//stimulusPlayer = StimulusPlayer("data/stimuli/");
+		stimulusPlayer.loadStimuli("data/stimuli/form1.txt", "stimuli/sounds/form4/");
+		stimulusPlayer.setTimes(stimulusOnTime, interStimulusBaseDelayTime, interStimulusRandDelayTime);
+
+		// Setup Listeners
+		ofAddListener(stimulusPlayer.stimulusPlay, this, &testApp::stimulusPlay);
+		ofAddListener(stimulusPlayer.stimulusStop, this, &testApp::stimulusStop);
+		//stimulusPlayer.randomizeStimuli();
+
+		experimentGovernor.setStimulusPlayer(&stimulusPlayer);
+	}
+	
 	// Startup screen display parameters
 	ofBackground(0, 0, 0);
 
@@ -116,17 +156,8 @@ void testApp::setup() {
 	SetupOscilloscopes();
 	isScopePaused = false;
 
-	// Setup StimulusPlayer
-	if (showStimuli) {
-		//stimulusPlayer = StimulusPlayer("data/stimuli/");
-		stimulusPlayer.loadStimuli("data/stimuli/form1.txt", "stimuli/sounds/form4/");
-		stimulusPlayer.setTimes(0.5, 0.5, 0.2);
-		ofAddListener(stimulusPlayer.stimulusPlay, this, &testApp::stimulusPlay);
-		ofAddListener(stimulusPlayer.stimulusStop, this, &testApp::stimulusStop);
-		//stimulusPlayer.randomizeStimuli();
-	}
 
-	participantNumber = 0;
+	//participantNumber = 0;
 	
 	// **** Start threads **** //
 	// DO THIS LAST OR YOU NEED TO LOCK() ON SETUP FUNCTIONS
@@ -203,7 +234,8 @@ void testApp::stimulusPlay(Stimulus & stimulus) {
 	if (logData) {
 		if (logger.isThreadRunning()) logger.lock();
 		std::stringstream ss;
-		ss << myGetElapsedTimeMillis() << "," << vLogFormat << "," << "SP," << stimulus.str() << ",\n";
+		ss << myGetElapsedTimeMillis() << "," << vLogFormat << "," << STIMULUS_PLAY_CODE << 
+			"," << stimulus.str() << ",\n";
 		logger.loggerQueue.push(ss.str());
 		//logger.push_back(myGetElapsedTimeMillis(), LoggerData::STIMULUS_PLAY, stimulus.logPrint());
 		if (logger.isThreadRunning()) logger.unlock();
@@ -216,7 +248,8 @@ void testApp::stimulusStop(Stimulus & stimulus) {
 	if (logData) {
 		if (logger.isThreadRunning()) logger.lock();
 		std::stringstream ss;
-		ss << myGetElapsedTimeMillis() << "," << vLogFormat << ","  << "SS," << stimulus.str() << ",\n";
+		ss << myGetElapsedTimeMillis() << "," << vLogFormat << ","  << STIMULUS_STOP_CODE << 
+			"," << stimulus.str() << ",\n";
 		logger.loggerQueue.push(ss.str());
 		//logger.push_back(myGetElapsedTimeMillis(), LoggerData::STIMULUS_STOP, stimulus.logPrint());
 		if (logger.isThreadRunning()) logger.unlock();
@@ -229,7 +262,8 @@ void testApp::entrainmentOutChange(bool & output) {
 	if (logData) {
 		if (logger.isThreadRunning()) logger.lock();
 		std::stringstream ss;
-		ss << myGetElapsedTimeMillis() << "," << vLogFormat << ","  << "EO," << (output ? "1":"0") << ",\n";
+		ss << myGetElapsedTimeMillis() << "," << vLogFormat << ","  << ENTRAINMENT_OUT_CODE << 
+			"," << (output ? "1":"0") << ",\n";
 		logger.loggerQueue.push(ss.str());
 		//logger.push_back(myGetElapsedTimeMillis(), LoggerData::STIMULUS_STOP, output);
 		if (logger.isThreadRunning()) logger.unlock();
@@ -242,7 +276,8 @@ void testApp::entrainmentFreqChange(float & freq) {
 	if (logData) {
 		if (logger.isThreadRunning()) logger.lock();
 		std::stringstream ss;
-		ss << myGetElapsedTimeMillis() << "," << vLogFormat << ","  << "EF," <<  fixed << setprecision(3) << freq  << ",\n";
+		ss << myGetElapsedTimeMillis() << "," << vLogFormat << ","  << ENTRAINMENT_FREQ_CODE << 
+			"," <<  fixed << setprecision(3) << freq  << ",\n";
 		logger.loggerQueue.push(ss.str());
 		//logger.push_back(myGetElapsedTimeMillis(), LoggerData::ENTRAINMENT_FREQ, freq);
 		if (logger.isThreadRunning()) logger.unlock();
@@ -292,12 +327,13 @@ void testApp::newZeoRawData(bool & ready){
 
 	// Log data
 	if (logData) {
-		logger.lock();
+		if (logger.isThreadRunning()) logger.lock();
 		std::stringstream ss;
-		ss << myGetElapsedTimeMillis() << "," << vLogFormat << ","  << "RD," << strVectorF(zeoRawData.at(0)) << "\n";
+		ss << myGetElapsedTimeMillis() << "," << vLogFormat << ","  << RAW_DATA_CODE << 
+			"," << strVectorF(zeoRawData.at(0)) << "\n";
 		logger.loggerQueue.push(ss.str());
 		//logger.push_back(myGetElapsedTimeMillis(), LoggerData::RAW_DATA, zeoRawData.at(0));
-		logger.unlock();
+		if (logger.isThreadRunning()) logger.unlock();
 	}
 }
 
@@ -334,12 +370,13 @@ void testApp::newZeoSliceData(bool & ready){
 	}
 
 	if (logData) {
-		logger.lock();
+		if (logger.isThreadRunning()) logger.lock();
 		std::stringstream ss;
-		ss << myGetElapsedTimeMillis() << "," << vLogFormat << "," << "SD," << zeoSlice.str() << ",\n";
+		ss << myGetElapsedTimeMillis() << "," << vLogFormat << "," << SPLICE_DATA_CODE << 
+			"," << zeoSlice.str() << ",\n";
 		logger.loggerQueue.push(ss.str());
 		//logger.push_back(myGetElapsedTimeMillis(), LoggerData::SLICE_DATA, zeoSlice);
-		logger.unlock();
+		if (logger.isThreadRunning()) logger.unlock();
 	}
 
 	if (showOscilloscope) {
@@ -387,10 +424,15 @@ void testApp::buttonDown(){
 		if (logData) {
 			logger.lock();
 			std::stringstream ss;
-			ss << myGetElapsedTimeMillis() << "," << vLogFormat << "," << "BD" << ",\n";
+			ss << myGetElapsedTimeMillis() << "," << vLogFormat << "," << BUTTON_DOWN_CODE <<
+				"" << ",\n";
 			logger.loggerQueue.push(ss.str());
 			logger.unlock();
 		}
+		//if (showInstructions) {
+		//	instructionsPlayer.buttonPressed();
+		//}
+		experimentGovernor.buttonPressed();
 	}
 	isButtonPressed = true;
 }
@@ -404,7 +446,8 @@ void testApp::buttonUp(){
 		if (logData) {
 			logger.lock();
 			std::stringstream ss;
-			ss << myGetElapsedTimeMillis() << "," << vLogFormat << "," << "BU" << ",\n";
+			ss << myGetElapsedTimeMillis() << "," << vLogFormat << "," << BUTTON_UP_CODE << 
+				"" << ",\n";
 			logger.loggerQueue.push(ss.str());
 			logger.unlock();
 		}
@@ -414,17 +457,75 @@ void testApp::buttonUp(){
 
 
 //--------------------------------------------------------------
+void testApp::newExperimentState(string & state){
+#ifdef DEBUG_PRINT 
+	printf("newExperimentState()\n");
+#endif
+	if (logData) {
+		logger.lock();
+		std::stringstream ss;
+		ss << myGetElapsedTimeMillis() << "," << vLogFormat << "," << EXPERIMENT_STATE_CODE << 
+			"," << state << ",\n";
+		logger.loggerQueue.push(ss.str());
+		logger.unlock();
+	}
+	if (state == ExperimentGovernor::getStateString(ExperimentGovernor::StimulusPresentation)) {
+		freqOutThread.lock();
+		freqOutThread.resetFreqCycle();
+		freqOutThread.unlock();
+	}
+}
+
+//--------------------------------------------------------------
+void testApp::newParticipant(unsigned long & participantID){
+#ifdef DEBUG_PRINT 
+	printf("newParticipant()\n");
+#endif
+	if (logData) {
+		logger.lock();
+
+		std::stringstream ss;
+		ss << myGetElapsedTimeMillis() << "," << vLogFormat << "," << PARTICIPANT_ID_CODE << 
+			"," << participantID << ",\n";
+		logger.loggerQueue.push(ss.str());
+		
+		//experimentGovernor.reverseParticipantID(participantID);
+
+		//unsigned long participantID = (participantNumber ^ 2999975935);
+		//unsigned long participantID = (participantNumber ^ 313717);
+		//unsigned long temp = (participantID ^ 313717);
+
+		std::stringstream ss2;
+		ss2 << myGetElapsedTimeMillis() << "," << vLogFormat << "," << PARTICIPANT_NUMBER_CODE << 
+			"," << participantID << ",\n";
+		logger.loggerQueue.push(ss2.str());
+
+		logger.unlock();
+	}
+}
+
+//--------------------------------------------------------------
+void testApp::newInstructionsPage(int & pageNumber){
+#ifdef DEBUG_PRINT 
+	printf("newInstructionsPage()\n");
+#endif
+	if (logData) {
+		logger.lock();
+		std::stringstream ss;
+		ss << myGetElapsedTimeMillis() << "," << vLogFormat << "," << INSTRUCTIONS_PAGE_CODE <<
+			"," << pageNumber << ",\n";
+		logger.loggerQueue.push(ss.str());
+		logger.unlock();
+	}
+
+}
+
+//--------------------------------------------------------------
 void testApp::update(){
 #ifdef DEBUG_PRINT 
 	printf("update()\n");
 #endif
-	inputArduino.update();
-	int input = inputArduino.getAnalog(0);
-	if (input > 512) {
-		buttonDown();
-	} else {
-		buttonUp();
-	}
+
 }
 
 //--------------------------------------------------------------
@@ -445,6 +546,31 @@ void testApp::draw(){
 		logger.unlock();
 	}
 	*/
+	if (checkButtonPresses) {
+		inputArduino.update();
+		int input = inputArduino.getAnalog(0);
+		if (input > 512) {
+			buttonDown();
+		} else {
+			buttonUp();
+		}
+	}
+
+	experimentGovernor.update();
+
+	//if (showInstructions) {
+	//	instructionsPlayer.update();
+	//}
+	//if (showStimuli) {
+	//	if (stimulusPlayer.update() <= 0) {
+	//		//cout << "stimulus list complete \n";
+	//	}
+	//}
+
+	// Draw oscilloscope data
+	if (showOscilloscope) {
+		scopeWin.plot();
+	}
 
 	if (showScreenEntrainment) {
 		//freqOutThread.lock(); 
@@ -453,17 +579,6 @@ void testApp::draw(){
 	} else {
 		ofSleepMillis(1);
 		//sleep(1);
-	}
-
-	if (showStimuli) {
-		if (stimulusPlayer.updateStimulus() <= 0) {
-			//cout << "stimulus list complete \n";
-		}
-	}
-
-	// Draw oscilloscope data
-	if (showOscilloscope) {
-			scopeWin.plot();
 	}
 
 	cout << "time=" << myGetElapsedTimeMillis() << ", diff=" << myGetElapsedTimeMillis() - drawTime << "\n";
@@ -528,31 +643,16 @@ void testApp::keyReleased(int key){
 	if ( key == 's') {
 		if (showStimuli) {
 			//stimulusPlayer.randomizeStimuli();
-			participantNumber++;
-			//unsigned long participantID = (participantNumber ^ 2999975935);
-			unsigned long participantID = (participantNumber ^ 313717);
-			unsigned long participantID2 = (participantNumber ^ 0);
-			unsigned long temp = (participantID ^ 313717);
-			
-			unsigned long long ll = 4294967297;
-			unsigned long l = ll;
 
-			logger.lock();
-			std::stringstream ss;
-			ss << myGetElapsedTimeMillis() << "," << vLogFormat << ","  << "PN," << participantNumber << ",\n";
-			logger.loggerQueue.push(ss.str());
-			std::stringstream ss2;
-			ss2 << myGetElapsedTimeMillis() << "," << vLogFormat << "," << "ID," << participantNumber << ",\n";
-			logger.loggerQueue.push(ss2.str());
 			//logger.push_back(myGetElapsedTimeMillis(), LoggerData::PARTICIPANT_NUMBER, participantNumber);
 			//logger.push_back(myGetElapsedTimeMillis(), LoggerData::PARTICIPANT_ID, participantID);
-			logger.unlock();
-			if (participantNumber % 2) { 
-				stimulusPlayer.loadStimuli("data/stimuli/text/form4.txt", "stimuli/audio/form1/");
-			} else {
-				stimulusPlayer.loadStimuli("data/stimuli/text/form1.txt", "stimuli/audio/form4/");
-			}
-			stimulusPlayer.start();
+			//logger.unlock();
+			//if (participantNumber % 2) { 
+			//	stimulusPlayer.loadStimuli("data/stimuli/text/form4.txt", "stimuli/audio/form1/");
+			//} else {
+			//	stimulusPlayer.loadStimuli("data/stimuli/text/form1.txt", "stimuli/audio/form4/");
+			//}
+			//stimulusPlayer.start();
 		}
 	}
 }

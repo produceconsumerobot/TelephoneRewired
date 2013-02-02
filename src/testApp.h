@@ -11,6 +11,19 @@
 #include "logger.h"
 #include "myUtils.h"
 
+#define STIMULUS_PLAY_CODE		"SP" //
+#define STIMULUS_STOP_CODE 		"SS" //
+#define ENTRAINMENT_OUT_CODE 	"EO"
+#define ENTRAINMENT_FREQ_CODE 	"EF"
+#define RAW_DATA_CODE			"RD" 
+#define SPLICE_DATA_CODE		"SD"
+#define BUTTON_DOWN_CODE		"BD"
+#define BUTTON_UP_CODE			"BU"
+#define EXPERIMENT_STATE_CODE	"ES"
+#define PARTICIPANT_NUMBER_CODE	"PN"
+#define PARTICIPANT_ID_CODE		"ID"
+#define INSTRUCTIONS_PAGE_CODE	"IP" //
+
 class testApp : public ofBaseApp{
 	public:
 
@@ -46,10 +59,15 @@ class testApp : public ofBaseApp{
 		LoggerThread logger;
 		string logDirPath;
 
+
 		// Player to show stimuli
 		StimulusPlayer stimulusPlayer;
+		// Player to show instructions
+		InstructionsPlayer instructionsPlayer;
+		// State machine to step through the experiment
+		ExperimentGovernor experimentGovernor;
 
-		unsigned long participantNumber;
+		//unsigned long participantNumber;
 
 		int vLogFormat;
 
@@ -73,6 +91,9 @@ class testApp : public ofBaseApp{
 		void plotEntrainmentFreqData(float freq);
 		void stimulusPlay(Stimulus & stimulus);
 		void stimulusStop(Stimulus & stimulus);
+		void newExperimentState(string & state);
+		void newParticipant(unsigned long & participantID);
+		void newInstructionsPage(int & pageNumber);
 		void buttonDown();
 		void buttonUp();
 

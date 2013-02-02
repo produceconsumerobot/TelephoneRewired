@@ -111,6 +111,7 @@ public:
 	float getCurrentDuration();
 	int getCurrentOutDelay();
 	bool getCurrentOutState();
+	void resetFreqCycle();
 
 	ofEvent<bool> outputChanged;
 	ofEvent<float> freqChanged;
@@ -191,6 +192,14 @@ private:
 	//ofPoint _stimulusCenter;
 
 	void _setup();
+
+	string _textFilePath;
+	string _soundDirPath;
+
+	void setTextFilePath(string textFilePath);
+	void setSoundDirPath(string soundDirPath);
+
+	bool isQueuedStart;
 	
 public:
 	/* 
@@ -214,7 +223,7 @@ public:
 	** void setTimes(unsigned long baseOnTime, unsigned long randOnTime, unsigned long interStimulusDelay)
 	**		Sets stimulus timing (in milliseconds)
 	*/
-	void setTimes(float baseOnTime, float randOnTime, float interStimulusDelay);
+	void setTimes(float stimulusOnTime, float interStimulusBaseDelayTime, float interStimulusRandDelayTime);
 
 	/* 
 	** startStimulusCycle()
@@ -227,6 +236,16 @@ public:
 	*/
 	void start();
 
+	/* 
+	** queueStart()
+	**	ALGORITHM:
+	**		Sets a flag so that on next update, stimuli are loaded and started
+	**		This is a bit of a hack to overcome slowness of file loadStimuli 
+	**		and avoid showing an old screen during this period.
+	**		Might be better done with a separate thread.
+	*/
+	void queueStart(string textFilePath, string soundDirPath);
+
 	void randomizeStimuli(); // Randomizes the stimulus order
 
 	/* 
@@ -238,7 +257,7 @@ public:
 	**	OUTPUT:
 	**		int nRemaining	-- number of remaining stimuli to show
 	*/
-	int updateStimulus();
+	int update();
 
 	//Stimulus getCurrentStimulus();
 
@@ -250,14 +269,16 @@ class InstructionsPlayer
 {
 
 private:
-	//const int _nPages = 3;
+	int _nPages;
 	int _currentPage;
 
-	//const float _timeoutDelay = 3.; // Seconds
+	float _timeoutDelay; // Seconds
 	unsigned long _lastButtonPressTime;
+	unsigned long _participantCode;
 
 public:
-	InstructionsPlayer();
+	//InstructionsPlayer();
+	InstructionsPlayer(float timeout=3.);
 
 	/* 
 	** update()
@@ -274,35 +295,73 @@ public:
 	**		initiates page change
 	*/
 	void buttonPressed();
-
+	void showPage(int i);
 	void goToPage(int i);
+	int remaining();
+	void setParticipantCode(unsigned long participantCode);
 
 	ofEvent<int> newPage;
 };
+
+class TimedPagePlayer 
+{
+public:
+	static enum pages {Congratulations, BlankPage};
+
+	TimedPagePlayer();
+	void start(float duration=1., pages page=TimedPagePlayer::BlankPage);
+	bool update();
+	void setParticipantCode(unsigned long participantCode);
+private:
+	unsigned long _startTime;
+	pages _currentPage;
+	//int _pageNumber;
+	float _onDuration;
+	unsigned long _participantCode;
+
+};
+
 
 // Directs traffic of Experiment, what to show, when
 class ExperimentGovernor 
 {
 
 public:
-	static enum states {Instructions, StimulusPresentation};
+	static enum states {Instructions, BlankPage, StimulusPresentation, Congratulations, None}; // None must be last!!
+	static string getStateString(states state);	vector<bool> enabledStates;
 
 	ExperimentGovernor();
+	//ExperimentGovernor(InstructionsPlayer ip, StimulusPlayer sp);
 
 	void update(); // Controls instructions/stimulus presentation
 	void buttonPressed(); // Input detected
 	states getState();
-	//void setInstructionsPlayer(InstructionsPlayer p);
-	void StimulusPlayer(StimulusPlayer p);
+	void setInstructionsPlayer(InstructionsPlayer * p);
+	void setStimulusPlayer(StimulusPlayer * p);
+
+	void nextState();
+	void goToState(states state);
+	unsigned long generateParticipantID(unsigned long participantNumber);
+	unsigned long reverseParticipantID(unsigned long participantID);
 
 	ofEvent<string> newState;
+	ofEvent<unsigned long> newParticipant;
+
+
+
+	void setCongratulationsTime(float congratulationsTime);
 
 	//void includeInstructions(bool b);
 	//void includeStimuli(bool b);
 private:
 	states _currentState;
-	//InstructionsPlayer _instructionsPlayer;
-	//StimulusPlayer _stimulusPlayer;
+	InstructionsPlayer * _instructionsPlayer;
+	StimulusPlayer * _stimulusPlayer;
+	TimedPagePlayer _timedPagePlayer;
+	unsigned long _participantNumber;
+	unsigned long _lastButtonDownTime;
+	float _congratulationsTime;
 };
+
 
 #endif

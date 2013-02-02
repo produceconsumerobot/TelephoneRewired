@@ -169,6 +169,12 @@ void FreqOutThread::setFreqCycle(const int nFreqs, const float freqs[][2]) {
 	//unlock();
 }
 
+void FreqOutThread::resetFreqCycle() 
+{
+	_freqIterator = 0;
+	_outputDelay = 0.0;
+}
+
 // printFreqCycle
 // prints the current entrainment freq cycle
 void FreqOutThread::printFreqCycle() {
@@ -732,7 +738,7 @@ void Stimulus::_setup()
 	_stimulusCenter = ofPoint(ofGetWindowWidth()/2, ofGetWindowHeight()/2);
 	_isPlaying = false;
 	//std::stringstream ss;
-	cout << types::Sound;
+	cout << Stimulus::Sound;
 	//cout << ss;
 }
 
@@ -746,7 +752,7 @@ void Stimulus::playStimulus()
 		if (!_isPlaying) {
 			//ofSoundPlayer _mySound;
 			_mySound.loadSound(_data); //DOCUMENTATION PAGE EXAMPLE IS WRONG
-			_mySound.setVolume(0.95f);
+			_mySound.setVolume(0.75f);
 			_mySound.play();
 		}
 
@@ -788,10 +794,10 @@ string Stimulus::str()
 	string s;
 	switch(_type) 
 	{
-	case types::Sound:
+	case Stimulus::Sound:
 		s = "Sound";
 		break;
-	case types::Text:
+	case Stimulus::Text:
 		s = "Text";
 		break;
 	default:
@@ -822,6 +828,11 @@ void StimulusPlayer::_setup()
 	_nStimuliToShow = 0;
 	_stimulusIterator = _nStimuliToShow;
 	_stimulusCycleOn = false;
+
+	_textFilePath = "";
+	_soundDirPath = "";
+
+	isQueuedStart = false;
 	//_stimulusCenter = ofPoint(ofGetWindowWidth()/2, ofGetWindowHeight()/2);
 }
 
@@ -849,7 +860,7 @@ int StimulusPlayer::loadStimuli(string textFilePath, string soundDirPath)
 		int n = dir.numFiles();
 		//cout << "StimulusPlayer::loadStimuli dir.numFiles(); " << myGetElapsedTimef() << "\n";
 		for (int i=0; i<n; i++) {
-			sounds.push_back(Stimulus(Stimulus::types::Sound, dir.getPath(i)));
+			sounds.push_back(Stimulus(Stimulus::Sound, dir.getPath(i)));
 			//cout << "StimulusPlayer::loadStimuli dir.getPath " << myGetElapsedTimef() << "\n";
 		}
 	}
@@ -862,7 +873,7 @@ int StimulusPlayer::loadStimuli(string textFilePath, string soundDirPath)
 	if (file.exists() && file.canRead()) {
 		ofBuffer buffer = file.readToBuffer();
 		while (!buffer.isLastLine()) {
-			text.push_back(Stimulus(Stimulus::types::Text, buffer.getNextLine()));
+			text.push_back(Stimulus(Stimulus::Text, buffer.getNextLine()));
 		}
 	}
 	//cout << "StimulusPlayer::loadStimuli text loaded " << myGetElapsedTimef() << "\n";
@@ -904,6 +915,22 @@ void StimulusPlayer::start() {
 	_currentStimulusTimerStart = myGetElapsedTimeMillis();
 }
 
+void StimulusPlayer::queueStart(string textFilePath, string soundDirPath) {
+	isQueuedStart = true;
+	setTextFilePath(textFilePath);
+	setSoundDirPath(soundDirPath);
+}
+
+void StimulusPlayer::setTextFilePath(string textFilePath) 
+{
+	_textFilePath = textFilePath;
+}
+
+void StimulusPlayer::setSoundDirPath(string soundDirPath)
+{
+	_soundDirPath = soundDirPath;
+}
+
 void StimulusPlayer::randomizeStimuli()
 {
 	_stimulusCycle = _allStimuli;
@@ -911,8 +938,20 @@ void StimulusPlayer::randomizeStimuli()
 	_stimulusCycle.erase(_stimulusCycle.begin(), _stimulusCycle.begin() + _nStimuliToShow);
 }
 
-int StimulusPlayer::updateStimulus() {
+int StimulusPlayer::update() {
 	//cout << "StimulusPlayer::updateStimulus()\n";
+
+	if (isQueuedStart) {
+
+		isQueuedStart = false;
+
+		// Load the appropriate stimuli
+		loadStimuli(_textFilePath, _soundDirPath);
+		//Start the Stimulus Player
+		start();
+		
+	}
+
 	if (_stimulusCycleOn) {
 
 		if (_stimulusIterator >= _nStimuliToShow) {
@@ -967,4 +1006,488 @@ int StimulusPlayer::updateStimulus() {
 	return 0;
 }
 
+/*
+InstructionsPlayer::InstructionsPlayer() 
+{
+	_nPages = 3;
+	_timeoutDelay = 3.;
+}
+*/
 
+InstructionsPlayer::InstructionsPlayer(float timeout) 
+{
+	_nPages = 3;
+	_currentPage = 0;
+	_timeoutDelay = timeout;
+	_lastButtonPressTime = myGetElapsedTimeMillis();
+	setParticipantCode(777777); 
+}
+
+void InstructionsPlayer::update()
+{
+	if ((myGetElapsedTimeMillis() - _lastButtonPressTime) < ((unsigned long) (_timeoutDelay*1000))) {
+		showPage(_currentPage);
+	} else {
+		goToPage(0);
+	}
+}
+
+void InstructionsPlayer::buttonPressed()
+{
+	_lastButtonPressTime = myGetElapsedTimeMillis();
+	if (_currentPage + 1 < _nPages) {
+		goToPage(_currentPage + 1);
+	} 
+}
+
+void InstructionsPlayer::goToPage(int i)
+{
+	if (i != _currentPage) {
+		_currentPage = i;
+		ofNotifyEvent(newPage, i, this);
+	}
+	if (_currentPage < 2) {
+		setParticipantCode(777777);
+	}
+	showPage(_currentPage);
+}
+
+int InstructionsPlayer::remaining() 
+{
+	return _nPages - _currentPage -1;
+}
+
+void InstructionsPlayer::setParticipantCode(unsigned long participantCode) 
+{
+	_participantCode = participantCode;
+}
+
+void InstructionsPlayer::showPage(int i)
+{
+	switch (i) {
+	case 0:
+		{
+			ofTrueTypeFont font;
+			font.loadFont("verdana.ttf", 20, true, true);
+			ofColor fontColor(0,220,0);
+			ofPoint stimulusCenter(ofGetWindowWidth()/2, ofGetWindowHeight()/2);
+
+			string data1 = "Please press the GREEN button to begin";
+			//string data1 = "Please press the ";
+			//string data2 = "GREEN button to begin";
+			ofPushMatrix();
+			ofPushStyle();
+			ofRectangle bounds1 = font.getStringBoundingBox(data1, 0, 0);
+			//ofRectangle bounds2 = font.getStringBoundingBox(data2, 0, 0);
+			ofTranslate(-bounds1.width/2, bounds1.height / 2, 0);
+			ofSetColor(fontColor);
+			font.drawString(data1, stimulusCenter.x, stimulusCenter.y);
+			ofPopStyle();
+			ofPopMatrix();
+
+			break;
+		}
+	case 1:
+		{
+			ofTrueTypeFont font;
+			font.loadFont("verdana.ttf", 20, true, true);
+			ofColor fontColor(0,220,0);
+			ofPoint stimulusCenter(ofGetWindowWidth()/2, ofGetWindowHeight()/2);
+
+			string data1 = "this is page 2";
+			//string data1 = "Please press the ";
+			//string data2 = "GREEN button to begin";
+			ofPushMatrix();
+			ofPushStyle();
+			ofRectangle bounds1 = font.getStringBoundingBox(data1, 0, 0);
+			//ofRectangle bounds2 = font.getStringBoundingBox(data2, 0, 0);
+			ofTranslate(-bounds1.width/2, bounds1.height / 2, 0);
+			ofSetColor(fontColor);
+			font.drawString(data1, stimulusCenter.x, stimulusCenter.y);
+			ofPopStyle();
+			ofPopMatrix();
+			break;
+		}
+	case 2:
+		{		
+			ofTrueTypeFont font;
+			font.loadFont("verdana.ttf", 20, true, true);
+			ofColor fontColor(0,220,0);
+			ofPoint stimulusCenter(ofGetWindowWidth()/2, ofGetWindowHeight()/2);
+
+			std::stringstream ss;
+			ss << "this is page 3\n" << "USER ID: " << _participantCode;
+			string data1 = ss.str();//"this is page 3";
+			//string data1 = "Please press the ";
+			//string data2 = "GREEN button to begin";
+			ofPushMatrix();
+			ofPushStyle();
+			ofRectangle bounds1 = font.getStringBoundingBox(data1, 0, 0);
+			//ofRectangle bounds2 = font.getStringBoundingBox(data2, 0, 0);
+			ofTranslate(-bounds1.width/2, bounds1.height / 2, 0);
+			ofSetColor(fontColor);
+			font.drawString(data1, stimulusCenter.x, stimulusCenter.y);
+			ofPopStyle();
+			ofPopMatrix();
+			break;
+		}
+	default:
+		break;
+	}
+}
+
+
+ExperimentGovernor::ExperimentGovernor() 
+{
+	_currentState = ExperimentGovernor::None;
+	_participantNumber = 0;
+	_congratulationsTime = 15;
+	
+	enabledStates.resize(ExperimentGovernor::None + 1); // only works if None is last!!
+	enabledStates.at(ExperimentGovernor::Instructions) = false;
+	enabledStates.at(ExperimentGovernor::BlankPage) = false;
+	enabledStates.at(ExperimentGovernor::StimulusPresentation) = false;
+	enabledStates.at(ExperimentGovernor::Congratulations) = false;
+	enabledStates.at(ExperimentGovernor::None) = true;
+}
+
+/*
+ExperimentGovernor::ExperimentGovernor(InstructionsPlayer ip, StimulusPlayer sp)
+{
+	_participantNumber = 0;
+
+	setInstructionsPlayer(ip);
+	setStimulusPlayer(sp);
+
+	enabledStates.resize(ExperimentGovernor::None + 1); // only works if None is last!!
+	enabledStates.at(ExperimentGovernor::None) = true;
+
+	// Go to next state
+	_currentState = ExperimentGovernor::Instructions;
+}
+*/
+
+void ExperimentGovernor::setInstructionsPlayer(InstructionsPlayer * ip) 
+{
+	_instructionsPlayer = ip;
+	enabledStates.at(ExperimentGovernor::Instructions) = true;
+}
+
+void ExperimentGovernor::setStimulusPlayer(StimulusPlayer * sp) 
+{
+	_stimulusPlayer = sp;
+	enabledStates.at(ExperimentGovernor::StimulusPresentation) = true;
+	enabledStates.at(ExperimentGovernor::BlankPage) = true;
+	enabledStates.at(ExperimentGovernor::Congratulations) = true;
+}
+
+void ExperimentGovernor::goToState(states state)
+{
+	switch (state) {
+	case ExperimentGovernor::Instructions:
+		{
+			_currentState = ExperimentGovernor::Instructions;
+			string s = getStateString(_currentState);
+			ofNotifyEvent(newState, s, this);
+			_instructionsPlayer->goToPage(0);
+		}
+		break;
+
+	case ExperimentGovernor::BlankPage:
+		{
+			_currentState = ExperimentGovernor::BlankPage;
+			string s = getStateString(_currentState);
+			ofNotifyEvent(newState, s, this);
+			_timedPagePlayer.start(0.5);
+		}
+		break;
+
+	case ExperimentGovernor::StimulusPresentation:
+		{
+			_currentState = ExperimentGovernor::StimulusPresentation;
+			string s = getStateString(_currentState);
+			ofNotifyEvent(newState, s, this);
+
+			if (_participantNumber % 2) { 
+				_stimulusPlayer->queueStart("data/stimuli/text/form4.txt", "stimuli/audio/form1/");
+			} else {
+				_stimulusPlayer->queueStart("data/stimuli/text/form1.txt", "stimuli/audio/form4/");
+			}
+			/*
+			// Load the appropriate stimuli
+			if (_participantNumber % 2) { 
+			_stimulusPlayer->loadStimuli("data/stimuli/text/form4.txt", "stimuli/audio/form1/");
+			} else {
+			_stimulusPlayer->loadStimuli("data/stimuli/text/form1.txt", "stimuli/audio/form4/");
+			}
+			//Start the Stimulus Player
+			_stimulusPlayer->start();
+			*/
+		}
+		break;
+	case ExperimentGovernor::Congratulations:
+		{
+			_currentState = ExperimentGovernor::Congratulations;
+			string s = getStateString(_currentState);
+			ofNotifyEvent(newState, s, this);
+			_timedPagePlayer.start(_congratulationsTime, TimedPagePlayer::Congratulations);
+		}
+		break;
+	case ExperimentGovernor::None:
+		{
+			_currentState = ExperimentGovernor::None;
+			string s = "None";
+			ofNotifyEvent(newState, s, this);
+		}
+		break;
+	default:
+		break;
+	}
+}
+
+string ExperimentGovernor::getStateString(states state) 
+{
+	switch (state) {
+	case Instructions:
+		return "Instructions";
+		break;
+	case BlankPage:
+		return "BlankPage";
+		break;
+	case StimulusPresentation:
+		return "StimulusPresentation";
+		break;
+	case Congratulations:
+		return "Congratulations";
+		break;
+	case None:
+		return "None";
+		break;
+	default:
+		return "";
+		break;
+	}
+}
+
+void ExperimentGovernor::nextState()
+{
+	switch (_currentState) {
+
+	// Instructions
+	case ExperimentGovernor::Instructions: 
+		if (enabledStates.at(ExperimentGovernor::BlankPage)) {
+			// Go to BlankPage
+			goToState(ExperimentGovernor::BlankPage);
+
+		} else if (enabledStates.at(ExperimentGovernor::StimulusPresentation)) {
+			// Go to StimulusPresentation
+			goToState(ExperimentGovernor::StimulusPresentation);
+
+		} else if (enabledStates.at(ExperimentGovernor::Instructions) == true) {
+			// Go to Instructions
+			goToState(ExperimentGovernor::Instructions);
+
+		} else {
+			// Go to None
+			goToState(ExperimentGovernor::None);
+		}
+		break;
+
+	// BlankPage
+	case ExperimentGovernor::BlankPage: 
+		if (enabledStates.at(ExperimentGovernor::StimulusPresentation)) {
+			// Go to StimulusPresentation
+			goToState(ExperimentGovernor::StimulusPresentation);
+		} else {
+			// Go to None
+			goToState(ExperimentGovernor::None);
+		}
+		break;
+
+	// StimulusPresentation
+	case ExperimentGovernor::StimulusPresentation:
+		if (enabledStates.at(ExperimentGovernor::Congratulations) == true) {
+			// Go to Instructions
+			goToState(ExperimentGovernor::Congratulations);
+
+		} else if (enabledStates.at(ExperimentGovernor::Instructions) == true) {
+			// Go to Instructions
+			goToState(ExperimentGovernor::Instructions);
+
+		} else if (enabledStates.at(ExperimentGovernor::StimulusPresentation)) {
+			// Nothing to do here
+
+		} else {
+			// Go to None
+			goToState(ExperimentGovernor::None);
+
+		}
+		break;
+	// Congratulations
+	case ExperimentGovernor::Congratulations:
+		if (enabledStates.at(ExperimentGovernor::Instructions) == true) {
+			// Go to Instructions
+			goToState(ExperimentGovernor::Instructions);
+
+		} else {
+			// Go to None
+			goToState(ExperimentGovernor::None);
+
+		}
+		break;
+	
+	// None
+	case ExperimentGovernor::None: 
+		if (enabledStates.at(ExperimentGovernor::Instructions) == true) {
+			// Go to Instructions
+			goToState(ExperimentGovernor::Instructions);
+
+		} else if (enabledStates.at(ExperimentGovernor::StimulusPresentation)) {
+			// Go to StimulusPresentation
+			goToState(ExperimentGovernor::StimulusPresentation);
+		} else {
+			// Nothing to do here
+		}
+		break;
+
+	default:
+		break;
+	}
+}
+
+void ExperimentGovernor::update() {
+	switch (_currentState) {
+	case ExperimentGovernor::None:
+		// Nothing to do here
+		break;
+	case ExperimentGovernor::Instructions:
+		// Refresh the instructions
+		_instructionsPlayer->update();
+		break;
+	case ExperimentGovernor::BlankPage:
+		if (_timedPagePlayer.update()) {
+			nextState();
+		}
+		break;	
+	case ExperimentGovernor::StimulusPresentation:
+		// Refresh the Stimulus
+		if (_stimulusPlayer->update() <= 0) {
+			// Go to next state
+			nextState();
+		}		
+		break;
+	case ExperimentGovernor::Congratulations:
+		if (_timedPagePlayer.update()) {
+			nextState();
+		}
+		break;	
+	default:
+		break;
+	}
+}
+
+void ExperimentGovernor::buttonPressed() {
+	switch (_currentState) {
+	case ExperimentGovernor::None:
+		// Go to next state
+		nextState();
+		break;
+	case ExperimentGovernor::Instructions:
+		if (_instructionsPlayer->remaining() == 1) { 
+			// Notify callbacks for logging
+			unsigned long p = ++_participantNumber;
+			unsigned long id = generateParticipantID(_participantNumber);
+			ofNotifyEvent(newParticipant, id, this);
+
+			_instructionsPlayer->setParticipantCode(id);
+			_timedPagePlayer.setParticipantCode(id);
+			_instructionsPlayer->buttonPressed();
+
+		} else if (_instructionsPlayer->remaining() > 0) { 
+			// If there are remaining instructions, go for it
+			_instructionsPlayer->buttonPressed();
+		} else {
+			// Go to next state;
+			nextState();
+		}
+		break;
+	case ExperimentGovernor::StimulusPresentation:
+		// Nothing to do here
+		break;
+	default:
+		// Nothing to do here
+		break;
+	}
+}
+
+unsigned long ExperimentGovernor::generateParticipantID(unsigned long participantNumber) 
+{
+	return (participantNumber ^ 313717);
+}
+
+unsigned long ExperimentGovernor::reverseParticipantID(unsigned long participantID) 
+{
+	return (participantID ^ 313717);
+}
+
+
+void ExperimentGovernor::setCongratulationsTime(float congratulationsTime) 
+{
+	_congratulationsTime = congratulationsTime;
+}
+
+TimedPagePlayer::TimedPagePlayer()
+{
+	_currentPage = TimedPagePlayer::BlankPage;
+	_onDuration = 0.0;
+	setParticipantCode(777777) ;
+}
+
+void TimedPagePlayer::setParticipantCode(unsigned long participantCode) 
+{
+	_participantCode = participantCode;
+}
+
+void TimedPagePlayer::start(float duration, pages page) 
+{
+	_currentPage = page;
+	_onDuration = duration;
+	_startTime = myGetElapsedTimeMillis();
+}
+
+bool TimedPagePlayer::update() 
+{
+	if ((myGetElapsedTimeMillis() - _startTime) < _onDuration*1000) {
+		switch (_currentPage) {
+		case TimedPagePlayer::Congratulations:
+			{
+				ofTrueTypeFont font;
+				font.loadFont("verdana.ttf", 20, true, true);
+				ofColor fontColor(0,220,0);
+				ofPoint stimulusCenter(ofGetWindowWidth()/2, ofGetWindowHeight()/2);
+
+				std::stringstream ss;
+				ss << "CONGRATULATIONS!! YOUR ARE STOKED MAX!\n" << "USER ID: " << _participantCode;
+				string data1 = ss.str();//"this is page 3";
+				//string data1 = "Please press the ";
+				//string data2 = "GREEN button to begin";
+				ofPushMatrix();
+				ofPushStyle();
+				ofRectangle bounds1 = font.getStringBoundingBox(data1, 0, 0);
+				//ofRectangle bounds2 = font.getStringBoundingBox(data2, 0, 0);
+				ofTranslate(-bounds1.width/2, bounds1.height / 2, 0);
+				ofSetColor(fontColor);
+				font.drawString(data1, stimulusCenter.x, stimulusCenter.y);
+				ofPopStyle();
+				ofPopMatrix();
+			}
+			break;
+		default:
+			// blank page
+			break;
+		}
+		return false; // isDone == false
+	} else {
+		return true; // isDone == true
+	}
+}
