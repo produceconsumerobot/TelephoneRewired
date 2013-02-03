@@ -31,17 +31,20 @@
     <ClCompile Include="..\..\..\addons\ofxMidi\src\ofxMidiOut.cpp">
       <Filter>addons\ofxMidi\src</Filter>
     </ClCompile>
-    <ClCompile Include="src\telephoneRewired.cpp">
-      <Filter>src</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\..\addons\zeoParser\src\zeoParser.cpp">
       <Filter>addons\zeoParser\src</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\addons\ofxOscilloscope\src\ofxOscilloscope.cpp">
       <Filter>addons\ofxOscilloscope\src</Filter>
     </ClCompile>
-    <ClCompile Include="src\logger.cpp">
-      <Filter>src</Filter>
+    <ClCompile Include="..\TelephoneRewiredLib\src\logger.cpp">
+      <Filter>TelephoneRewiredLib\src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\TelephoneRewiredLib\src\telephoneRewired.cpp">
+      <Filter>TelephoneRewiredLib\src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\TelephoneRewiredLib\src\experimentGovernor.cpp">
+      <Filter>TelephoneRewiredLib\src</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -74,6 +77,12 @@
     </Filter>
     <Filter Include="addons\zeoParser\src">
       <UniqueIdentifier>{d1762564-002a-4cc4-ac65-cb910c04e482}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="TelephoneRewiredLib">
+      <UniqueIdentifier>{9142a383-92a7-4222-944e-144afb91ecde}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="TelephoneRewiredLib\src">
+      <UniqueIdentifier>{5885823d-6c92-44c1-8e0d-e768dd153b48}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -113,23 +122,32 @@
     <ClInclude Include="..\..\..\addons\ofxMidi\src\ofxMidiTypes.h">
       <Filter>addons\ofxMidi\src</Filter>
     </ClInclude>
-    <ClInclude Include="src\telephoneRewired.h">
-      <Filter>src</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\..\addons\zeoParser\src\zeoParser.h">
       <Filter>addons\zeoParser\src</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\addons\ofxOscilloscope\src\ofxOscilloscope.h">
       <Filter>addons\ofxOscilloscope\src</Filter>
     </ClInclude>
-    <ClInclude Include="src\logger.h">
+    <ClInclude Include="src\telephoneRewiredSettings.h">
       <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="..\TelephoneRewiredLib\src\logger.h">
+      <Filter>TelephoneRewiredLib\src</Filter>
+    </ClInclude>
+    <ClInclude Include="..\TelephoneRewiredLib\src\myUtils.h">
+      <Filter>TelephoneRewiredLib\src</Filter>
+    </ClInclude>
+    <ClInclude Include="..\TelephoneRewiredLib\src\telephoneRewired.h">
+      <Filter>TelephoneRewiredLib\src</Filter>
     </ClInclude>
     <ClInclude Include="src\brainTrainment.h">
       <Filter>src</Filter>
     </ClInclude>
-    <ClInclude Include="src\myUtils.h">
-      <Filter>src</Filter>
+    <ClInclude Include="..\TelephoneRewiredLib\src\telephoneRewiredLoggerCodes.h">
+      <Filter>TelephoneRewiredLib\src</Filter>
+    </ClInclude>
+    <ClInclude Include="..\TelephoneRewiredLib\src\experimentGovernor.h">
+      <Filter>TelephoneRewiredLib\src</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

@@ -21,6 +21,8 @@
 //  To view a copy of this license, visit http://creativecommons.org/licenses/by-sa/3.0/.
 //
 
+#include <vector>
+
 #ifndef _ENTRAINMENT_CYCLES
 #define _ENTRAINMENT_CYCLES
 
@@ -270,6 +272,25 @@ static const float ENTRAINMENT_DEBUGGING2_SCREEN[nENTRAINMENT_DEBUGGING2_SCREEN]
 	{THETA_SCREEN, 10}, //4
 	{DELTA_SCREEN, 10}, //5
 };
+
+static std::vector<FreqOutThread::freqInterval> createFreqCycle(const int nFreqs, const float freqs[][2]) {
+#ifdef DEBUG_PRINT 
+	printf("setFreqCycle()\n");
+#endif
+	//lock();
+
+	std::vector<FreqOutThread::freqInterval> freqCycle;
+
+	freqCycle.resize(nFreqs);
+
+	for (int i=0; i<nFreqs; i++) {
+		freqCycle.at(i).freq = freqs[i][0];
+		freqCycle.at(i).duration = freqs[i][1];
+	}
+
+	return freqCycle;
+};
+
 
 
 #endif

@@ -5,27 +5,21 @@
 #include "ofMain.h"
 #include "ofxMidi.h"
 
-#include "telephoneRewired.h"
+
+#include "telephoneRewired.h" // Requires ofxMidi and zeoParser
 #include "brainTrainment.h"
 #include "ofxOscilloscope.h"
 #include "logger.h"
 #include "myUtils.h"
+#include "telephoneRewiredSettings.h"
+#include "telephoneRewiredLoggerCodes.h"
+#include "experimentGovernor.h"
 
-#define STIMULUS_PLAY_CODE		"SP" //
-#define STIMULUS_STOP_CODE 		"SS" //
-#define ENTRAINMENT_OUT_CODE 	"EO"
-#define ENTRAINMENT_FREQ_CODE 	"EF"
-#define RAW_DATA_CODE			"RD" 
-#define SPLICE_DATA_CODE		"SD"
-#define BUTTON_DOWN_CODE		"BD"
-#define BUTTON_UP_CODE			"BU"
-#define EXPERIMENT_STATE_CODE	"ES"
-#define PARTICIPANT_NUMBER_CODE	"PN"
-#define PARTICIPANT_ID_CODE		"ID"
-#define INSTRUCTIONS_PAGE_CODE	"IP" //
 
 class testApp : public ofBaseApp{
 	public:
+
+		TelephoneRewiredSettings settings;
 
 		FreqOutThread freqOutThread;
 

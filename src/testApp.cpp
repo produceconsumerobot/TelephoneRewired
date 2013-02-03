@@ -7,28 +7,19 @@ void testApp::setup() {
 	// **** COMPUTER SPECIFIC VARIABLES **** //
 
 	// Arduino for outputing on LEDs
-	//string ledArduinoPort = "\\\\.\\COM4"; // Sean, Windows, Uno
-	string ledArduinoPort = "\\\\.\\COM7"; // Sean, Windows, Uno
-	//string ledArduinoPort = "tty.usbmodemfa141"; // Sean, Mac, Arduino Decimila
-	//string ledArduinoPort = "/dev/cu.usbserial-A70064Yu"; // Sean, Mac, Arduino Decimila
-    //tty.usbmodemfa141
-    //cu.usbmodemfa141
-    //string ledArduinoPort = "tty.usbmodem1411"; //Mac
+	string ledArduinoPort = settings.ledArduinoPort;
 
 	// Arduino for taking button press inputs
-	//string inputArduinoPort = "\\\\.\\COM6";
-	string inputArduinoPort = "\\\\.\\COM8";
+	string inputArduinoPort = settings.inputArduinoPort; 
 
 	// Zeo Port
-	string zeoPort = "\\\\.\\COM5";
-    //string zeoPort = "tty.usbserial"; //Mac
+	string zeoPort = settings.zeoPort; 
     
     // Midi Port
-    //int midiPort = 0;
-	int midiPort = 1;
+	int midiPort = settings.midiPort;
     
 	// Log Directory
-	logDirPath = "../../LogData/";
+	logDirPath = settings.logDirPath; 
 
 	// **** END COMPUTER SPECIFIC VARIABLES **** //
 
@@ -38,33 +29,31 @@ void testApp::setup() {
 	// **** OPTIONS **** //
 
 	// Variables to control output functionality
-	checkButtonPresses = true; // requires Arduino
-	showInstructions = true;
-	showStimuli = true;
+	checkButtonPresses = settings.checkButtonPresses; // requires Arduino
+	showInstructions = settings.showInstructions; 
+	showStimuli = settings.showStimuli; 
 
-	showScreenEntrainment = false;
-	showLedEntrainment = true; // requires Arduino
-	playMidi = true;
+	showScreenEntrainment = settings.showScreenEntrainment; 
+	showLedEntrainment = settings.showLedEntrainment; // requires Arduino
+	playMidi = settings.playMidi; 
 
-	readEEG = true; // requires Zeo
-	showOscilloscope = false; // sloooows down screen drawing
-	logData = true;
+	readEEG = settings.readEEG; // requires Zeo
+	showOscilloscope = settings.showOscilloscope; // sloooows down screen drawing
+	logData = settings.logData; 
 
 	// Experiment Timing Variables
-	float stimulusOnTime =				.3;		// Seconds
-	float interStimulusBaseDelayTime =	1.;	// Seconds
-	float interStimulusRandDelayTime =	0.1;	// Seconds
-	float instructionsTimeoutDelay =	10.;		// Seconds
-	float congratulationsTime =			15.;	//Seconds
+	float stimulusOnTime = settings.stimulusOnTime; // Seconds
+	float interStimulusBaseDelayTime = settings.interStimulusBaseDelayTime;	// Seconds
+	float interStimulusRandDelayTime =	settings.interStimulusRandDelayTime; // Seconds
+	float instructionsTimeoutDelay =	settings.instructionsTimeoutDelay; 	// Seconds
+	float congratulationsTime =			settings.congratulationsTime; //Seconds
 
 	//Setup entrainment data listeners
 	ofAddListener(freqOutThread.outputChanged, this, &testApp::entrainmentOutChange);
 	ofAddListener(freqOutThread.freqChanged, this, &testApp::entrainmentFreqChange);
 
 	// Set the brainwave entrainment frequencies cycle... see brainTrainment.h
-	//freqOutThread.setFreqCycle(nENTRAINMENT_DEBUGGING2_SCREEN, ENTRAINMENT_DEBUGGING2_SCREEN);
-	freqOutThread.setFreqCycle(nBRAIN_MACHINE, BRAIN_MACHINE);
-	//freqOutThread.setFreqCycle(nBRAIN_MACHINE_FAST, BRAIN_MACHINE_FAST);
+	freqOutThread.setFreqCycle(settings.freqCycle);
 	
 	freqOutThread.printFreqCycle();
 	
@@ -133,6 +122,8 @@ void testApp::setup() {
 		//stimulusPlayer = StimulusPlayer("data/stimuli/");
 		stimulusPlayer.loadStimuli("data/stimuli/form1.txt", "stimuli/sounds/form4/");
 		stimulusPlayer.setTimes(stimulusOnTime, interStimulusBaseDelayTime, interStimulusRandDelayTime);
+		stimulusPlayer.setIterators(true, false) ;
+
 
 		// Setup Listeners
 		ofAddListener(stimulusPlayer.stimulusPlay, this, &testApp::stimulusPlay);
