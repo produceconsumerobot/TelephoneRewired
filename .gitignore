@@ -2,6 +2,7 @@
 ## Eclipse
 #################
 
+telephoneRewiredSettings.h
 *.pydevproject
 .project
 .metadata

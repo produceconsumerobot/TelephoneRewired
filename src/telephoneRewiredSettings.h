@@ -53,14 +53,14 @@ public:
 	{ 
 
 		// Arduino for outputing on LEDs
-		ledArduinoPort = "\\\\.\\COM7"; // Sean, Windows, Uno
+		ledArduinoPort = "\\\\.\\COM4"; // Sean, Windows, Uno
 		//string ledArduinoPort = "tty.usbmodem1411"; //Mac
 
 		// Arduino for taking button press inputs
-		inputArduinoPort = "\\\\.\\COM8";
+		inputArduinoPort = "\\\\.\\COM5";
 
 		// Zeo Port
-		zeoPort = "\\\\.\\COM5"; // PC
+		zeoPort = "\\\\.\\COM3"; // PC
 		//string zeoPort = "tty.usbserial"; //Mac
 
 		// Midi Port
@@ -81,8 +81,8 @@ public:
 		showLedEntrainment = true; // requires Arduino
 		playMidi = true;
 
-		readEEG = false; // requires Zeo
-		showOscilloscope = false; // sloooows down screen drawing
+		readEEG = true; // requires Zeo
+		showOscilloscope = true; // sloooows down screen drawing
 		logData = true;
 
 		// Experiment Timing Variables
