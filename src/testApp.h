@@ -60,6 +60,9 @@ class testApp : public ofBaseApp{
 		InstructionsPlayer instructionsPlayer;
 		// State machine to step through the experiment
 		ExperimentGovernor experimentGovernor;
+		TimedPagePlayer timedPagePlayer;
+
+		int nInstructionPages;
 
 		//unsigned long participantNumber;
 
@@ -88,6 +91,9 @@ class testApp : public ofBaseApp{
 		void newExperimentState(string & state);
 		void newParticipant(unsigned long & participantID);
 		void newInstructionsPage(int & pageNumber);
+		void drawInstructionsPage(int & pageNum);
+		void drawTimedPage(int & pageNum);
+
 		void buttonDown();
 		void buttonUp();
 

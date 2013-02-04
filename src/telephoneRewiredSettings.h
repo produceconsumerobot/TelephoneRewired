@@ -43,6 +43,9 @@ public:
 	float interStimulusRandDelayTime;	// Seconds
 	float instructionsTimeoutDelay;		// Seconds
 	float congratulationsTime;	//Seconds
+	float experimentTimeoutDelay;	//Seconds
+	
+	int nInstructionPages;
 
 	std::vector<FreqOutThread::freqInterval> freqCycle;
 
@@ -86,6 +89,9 @@ public:
 		interStimulusRandDelayTime =	0.1;	// Seconds
 		instructionsTimeoutDelay =		3.;	// Seconds
 		congratulationsTime =			15.;	// Seconds
+		experimentTimeoutDelay =		8.;
+
+		nInstructionPages = 3;
 
 		freqCycle = createFreqCycle(nBRAIN_MACHINE, BRAIN_MACHINE);
 	}

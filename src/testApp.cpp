@@ -47,6 +47,9 @@ void testApp::setup() {
 	float interStimulusRandDelayTime =	settings.interStimulusRandDelayTime; // Seconds
 	float instructionsTimeoutDelay =	settings.instructionsTimeoutDelay; 	// Seconds
 	float congratulationsTime =			settings.congratulationsTime; //Seconds
+	float experimentTimeoutDelay =			settings.experimentTimeoutDelay; //Seconds
+
+	nInstructionPages = settings.nInstructionPages;
 
 	//Setup entrainment data listeners
 	ofAddListener(freqOutThread.outputChanged, this, &testApp::entrainmentOutChange);
@@ -105,6 +108,9 @@ void testApp::setup() {
 	ofAddListener(experimentGovernor.newState, this, &testApp::newExperimentState);
 	ofAddListener(experimentGovernor.newParticipant, this, &testApp::newParticipant);
 	experimentGovernor.setCongratulationsTime(congratulationsTime);
+	experimentGovernor.setTimeoutDelay(experimentTimeoutDelay); 
+	experimentGovernor.addStimulusPaths("data/stimuli/training/text/form4.txt", "stimuli/training/audio/form1/");
+	experimentGovernor.addStimulusPaths("data/stimuli/training/text/form1.txt", "stimuli/training/audio/form4/");
 
 	// Setup Instruction Player
 	if (showInstructions) {
@@ -112,9 +118,13 @@ void testApp::setup() {
 		
 		// TODO: Setup Listeners
 		ofAddListener(instructionsPlayer.newPage, this, &testApp::newInstructionsPage);
+		ofAddListener(instructionsPlayer.drawPage, this, &testApp::drawInstructionsPage);
 
 		experimentGovernor.setInstructionsPlayer(&instructionsPlayer);
 		experimentGovernor.nextState();
+
+		ofAddListener(timedPagePlayer.drawPage, this, &testApp::drawTimedPage);
+		experimentGovernor.setTimedPagePlayer(&timedPagePlayer);
 	}
 
 	// Setup StimulusPlayer
@@ -218,6 +228,144 @@ void testApp::SetupOscilloscopes(){
 	zeoQualityData.resize(3, vector<float>(1, 0.));
 	entrainmentFreqData.resize(NUM_ENTRAINMENT_FREQS, vector<float>(1, 0.));
 }
+
+
+//--------------------------------------------------------------
+// Callback function to show different instructions pages
+void testApp::drawInstructionsPage(int & pageNum) {
+	if (showInstructions) {
+		int i = pageNum;
+		switch (i) {
+		case 0:
+			{
+				ofTrueTypeFont font;
+				font.loadFont("verdana.ttf", 20, true, true);
+				ofColor fontColor(0,220,0);
+				ofPoint stimulusCenter(ofGetWindowWidth()/2, ofGetWindowHeight()/2);
+
+				string data1 = "This is cool MAAX oh yeah";
+				//string data1 = "Please press the ";
+				//string data2 = "GREEN button to begin";
+				ofPushMatrix();
+				ofPushStyle();
+				ofRectangle bounds1 = font.getStringBoundingBox(data1, 0, 0);
+				//ofRectangle bounds2 = font.getStringBoundingBox(data2, 0, 0);
+				ofTranslate(-bounds1.width/2, bounds1.height / 2, 0);
+				ofSetColor(fontColor);
+				font.drawString(data1, stimulusCenter.x, stimulusCenter.y);
+				ofPopStyle();
+				ofPopMatrix();
+
+				break;
+			}
+		case 1:
+			{
+				ofTrueTypeFont font;
+				font.loadFont("verdana.ttf", 20, true, true);
+				ofColor fontColor(0,220,0);
+				ofPoint stimulusCenter(ofGetWindowWidth()/2, ofGetWindowHeight()/2);
+
+				string data1 = "this is cool page 2.0";
+				//string data1 = "Please press the ";
+				//string data2 = "GREEN button to begin";
+				ofPushMatrix();
+				ofPushStyle();
+				ofRectangle bounds1 = font.getStringBoundingBox(data1, 0, 0);
+				//ofRectangle bounds2 = font.getStringBoundingBox(data2, 0, 0);
+				ofTranslate(-bounds1.width/2, bounds1.height / 2, 0);
+				ofSetColor(fontColor);
+				font.drawString(data1, stimulusCenter.x, stimulusCenter.y);
+				ofPopStyle();
+				ofPopMatrix();
+				break;
+			}
+		case 2:
+			{		
+				ofTrueTypeFont font;
+				font.loadFont("verdana.ttf", 20, true, true);
+				ofColor fontColor(0,220,0);
+				ofPoint stimulusCenter(ofGetWindowWidth()/2, ofGetWindowHeight()/2);
+
+				std::stringstream ss;
+				ss << "this is rad page 3.0\n" << "USER ID: " << experimentGovernor.getParticipantID();
+				string data1 = ss.str();//"this is page 3";
+				//string data1 = "Please press the ";
+				//string data2 = "GREEN button to begin";
+				ofPushMatrix();
+				ofPushStyle();
+				ofRectangle bounds1 = font.getStringBoundingBox(data1, 0, 0);
+				//ofRectangle bounds2 = font.getStringBoundingBox(data2, 0, 0);
+				ofTranslate(-bounds1.width/2, bounds1.height / 2, 0);
+				ofSetColor(fontColor);
+				font.drawString(data1, stimulusCenter.x, stimulusCenter.y);
+				ofPopStyle();
+				ofPopMatrix();
+				break;
+			}
+		default:
+			break;
+		}
+	}
+}
+
+//--------------------------------------------------------------
+// Callback function to show different timed pages
+void testApp::drawTimedPage(int & pageNum) {
+	if (showInstructions) {
+		switch (pageNum) {
+		case TimedPagePlayer::Congratulations:
+			{
+				ofTrueTypeFont font;
+				font.loadFont("verdana.ttf", 20, true, true);
+				ofColor fontColor(0,220,0);
+				ofPoint stimulusCenter(ofGetWindowWidth()/2, ofGetWindowHeight()/2);
+
+				std::stringstream ss;
+				ss << "WEEE DOGGY 2.0!! YOUR ARE STOKED MAX!\n" << "USER ID: " << experimentGovernor.getParticipantID();
+				string data1 = ss.str();//"this is page 3";
+				//string data1 = "Please press the ";
+				//string data2 = "GREEN button to begin";
+				ofPushMatrix();
+				ofPushStyle();
+				ofRectangle bounds1 = font.getStringBoundingBox(data1, 0, 0);
+				//ofRectangle bounds2 = font.getStringBoundingBox(data2, 0, 0);
+				ofTranslate(-bounds1.width/2, bounds1.height / 2, 0);
+				ofSetColor(fontColor);
+				font.drawString(data1, stimulusCenter.x, stimulusCenter.y);
+				ofPopStyle();
+				ofPopMatrix();
+			}
+			break;
+		case TimedPagePlayer::ThankYou:
+			{
+				ofTrueTypeFont font;
+				font.loadFont("verdana.ttf", 20, true, true);
+				ofColor fontColor(0,220,0);
+				ofPoint stimulusCenter(ofGetWindowWidth()/2, ofGetWindowHeight()/2);
+
+				std::stringstream ss;
+				ss << "Thank You!\n" ;
+				string data1 = ss.str();//"this is page 3";
+				//string data1 = "Please press the ";
+				//string data2 = "GREEN button to begin";
+				ofPushMatrix();
+				ofPushStyle();
+				ofRectangle bounds1 = font.getStringBoundingBox(data1, 0, 0);
+				//ofRectangle bounds2 = font.getStringBoundingBox(data2, 0, 0);
+				ofTranslate(-bounds1.width/2, bounds1.height / 2, 0);
+				ofSetColor(fontColor);
+				font.drawString(data1, stimulusCenter.x, stimulusCenter.y);
+				ofPopStyle();
+				ofPopMatrix();
+			}
+			break;		
+		default:
+			// blank page
+			break;
+		}
+	}
+}
+
 
 //--------------------------------------------------------------
 // Callback function to log stimulus ON events
@@ -595,7 +743,9 @@ void testApp::exit(){
 
 //--------------------------------------------------------------
 void testApp::keyPressed(int key){
-
+	if ( ((char) key) == 'b') {
+		buttonDown();
+	}
 }
 
 //--------------------------------------------------------------
@@ -646,6 +796,11 @@ void testApp::keyReleased(int key){
 			//stimulusPlayer.start();
 		}
 	}
+
+	if ( ((char) key) == 'b') {
+		buttonUp();
+	}
+
 }
 
 //--------------------------------------------------------------
