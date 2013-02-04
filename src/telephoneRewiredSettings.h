@@ -68,7 +68,9 @@ public:
 		midiPort = 1; // PC
 
 		// Log Directory
-		logDirPath = "../../LogData/";
+		//logDirPath = "../../LogData/";
+		logDirPath = "L:/LogData/";
+
 
 		// Variables to control output functionality
 		checkButtonPresses = true; // requires Arduino
@@ -87,9 +89,9 @@ public:
 		stimulusOnTime =				.3;		// Seconds
 		interStimulusBaseDelayTime =	1.;		// Seconds
 		interStimulusRandDelayTime =	0.1;	// Seconds
-		instructionsTimeoutDelay =		3.;	// Seconds
-		congratulationsTime =			15.;	// Seconds
-		experimentTimeoutDelay =		8.;
+		instructionsTimeoutDelay =		60.;	// Seconds
+		congratulationsTime =			20.;	// Seconds
+		experimentTimeoutDelay =		120.;
 
 		nInstructionPages = 3;
 
