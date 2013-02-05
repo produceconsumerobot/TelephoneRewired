@@ -48,6 +48,7 @@ public:
 	int nInstructionPages;
 
 	std::vector<FreqOutThread::freqInterval> freqCycle;
+	std::vector<FreqOutThread::freqInterval> freqCycleExp;
 
 	TelephoneRewiredSettings() 
 	{ 
@@ -86,9 +87,9 @@ public:
 		logData = true;
 
 		// Experiment Timing Variables
-		stimulusOnTime =				.3;		// Seconds
-		interStimulusBaseDelayTime =	1.;		// Seconds
-		interStimulusRandDelayTime =	0.1;	// Seconds
+		stimulusOnTime =				.5;		// Seconds
+		interStimulusBaseDelayTime =	10.;		// Seconds
+		interStimulusRandDelayTime =	3.;	// Seconds
 		instructionsTimeoutDelay =		60.;	// Seconds
 		congratulationsTime =			20.;	// Seconds
 		experimentTimeoutDelay =		120.;
@@ -96,6 +97,7 @@ public:
 		nInstructionPages = 3;
 
 		freqCycle = createFreqCycle(nBRAIN_MACHINE, BRAIN_MACHINE);
+		freqCycleExp = createFreqCycle(nENTRAINMENT_SHOW, ENTRAINMENT_SHOW);
 	}
 };
 

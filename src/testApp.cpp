@@ -180,27 +180,40 @@ void testApp::setup() {
 	}
 
 	drawTime = myGetElapsedTimeMillis();
+
+	ofSetFullscreen(true);
 }
 
 //--------------------------------------------------------------
 void testApp::SetupOscilloscopes(){
 	// Setup oscilloscopes
 	int nScopes = 4;
-	ofPoint min = ofPoint(0., 10.);
-	ofPoint max = ofPoint(ofGetWindowSize().x, ofGetWindowSize().y-10);
+//	ofPoint min = ofPoint(0., 10.);
+	ofPoint min = ofPoint(-100., 10.);
+	//ofPoint max = ofPoint(ofGetWindowSize().x/2, ofGetWindowSize().y/2-10);
+	ofPoint max = ofPoint(ofGetWindowSize().x*1.6, ofGetWindowSize().y*6-10);
 	scopeWin = ofxMultiScope(nScopes, min, max);
-	int rawTimeWindow = 15;
+	int rawTimeWindow = 10;
 	int powerTimeWindow = 300;
+	ofColor c(20,20,20);
+	float f = 0.1;
 	{ // Filtered EEG Scope
 		const int nVariables = 1;
-		ofColor colors[nVariables] = {ofColor(0,200,0)};
+//		ofColor colors[nVariables] = {ofColor(0,200,0)};
+//		ofColor colors[nVariables] = {ofColor(0,200,0)*f};
+		ofColor colors[nVariables] = {ofColor(200,200,200)*f};
+//		ofColor colors[nVariables] = {c};
 		string names[nVariables] = {"Filt EEG"};
-		scopeWin.scopes.at(0).setup(rawTimeWindow, ZeoParser::RAW_DATA_LEN, names, colors, nVariables, 7., 0.);
+		scopeWin.scopes.at(0).setup(rawTimeWindow, ZeoParser::RAW_DATA_LEN, names, colors, nVariables, 3., 0.);
 	}
+	
 	{ // Power Data Scope
 		const int nVariables = ZeoParser::NUM_FREQS;
-		ofColor colors[nVariables] = {ofColor(200,0,0), ofColor(0,200,0), ofColor(0,0,200), 
-			ofColor(200,200,0), ofColor(200,0,200), ofColor(0,200,200), ofColor(100,100,100)};
+//		ofColor colors[nVariables] = {ofColor(200,0,0), ofColor(0,200,0), ofColor(0,0,200), 
+//			ofColor(200,200,0), ofColor(200,0,200), ofColor(0,200,200), ofColor(100,100,100)};
+		ofColor colors[nVariables] = {ofColor(200,0,0)*f, ofColor(0,200,0)*f, ofColor(0,0,200)*f, 
+			ofColor(200,200,0)*f, ofColor(200,0,200)*f, ofColor(0,200,200)*f, ofColor(100,100,100)*f};
+//		ofColor colors[nVariables] = {c,c,c,c,c,c,c};
 		string names[nVariables];
 		for (int i=0; i<nVariables; i++) {
 			names[i] = ZeoParser::labels[i];
@@ -209,14 +222,19 @@ void testApp::SetupOscilloscopes(){
 	}
 	{ // Entrainment Signal Scope
 		const int nVariables = NUM_ENTRAINMENT_FREQS;
-		ofColor colors[nVariables] = {ofColor(200,0,0), ofColor(0,200,0), ofColor(0,0,200), 
-			ofColor(200,200,0), ofColor(100,100,100)};
+//		ofColor colors[nVariables] = {ofColor(200,0,0), ofColor(0,200,0), ofColor(0,0,200), 
+//			ofColor(200,200,0), ofColor(100,100,100)};
+		ofColor colors[nVariables] = {ofColor(200,0,0)*f, ofColor(0,200,0)*f, ofColor(0,0,200)*f, 
+			ofColor(200,200,0)*f, ofColor(100,100,100)*f};
+//		ofColor colors[nVariables] = {c,c,c,c,c};
 		string names[nVariables] = {"DELTA", "THETA", "ALPHA", "BETA", "GAMMA"};
 		scopeWin.scopes.at(2).setup(powerTimeWindow, 1, names, colors, nVariables, 500, -350.);
 	}
 	{ // Data Reliability Scope
 		const int nVariables = 3;
-		ofColor colors[nVariables] = {ofColor(200,0,0), ofColor(0,200,0), ofColor(0,0,200)};
+//		ofColor colors[nVariables] = {ofColor(200,0,0), ofColor(0,200,0), ofColor(0,0,200)};
+		ofColor colors[nVariables] = {ofColor(200,0,0)*f, ofColor(0,200,0)*f, ofColor(0,0,200)*f};
+//		ofColor colors[nVariables] = {c,c,c};
 		string names[nVariables] = {"Impedance", "SQI", "Signal"};
 		scopeWin.scopes.at(3).setup(powerTimeWindow, 1, names, colors, nVariables, 0.5, -350.);
 	}
@@ -648,6 +666,13 @@ void testApp::newExperimentState(string & state){
 	}
 	if (state == ExperimentGovernor::getStateString(ExperimentGovernor::StimulusPresentation)) {
 		freqOutThread.lock();
+		freqOutThread.setFreqCycle(settings.freqCycleExp);
+		freqOutThread.resetFreqCycle();
+		freqOutThread.unlock();
+	}
+	if (state == ExperimentGovernor::getStateString(ExperimentGovernor::Congratulations)) {
+		freqOutThread.lock();
+		freqOutThread.setFreqCycle(settings.freqCycle);
 		freqOutThread.resetFreqCycle();
 		freqOutThread.unlock();
 	}
@@ -727,6 +752,12 @@ void testApp::draw(){
 		}
 	}
 
+	// Draw oscilloscope data
+	if (showOscilloscope) {
+		scopeWin.plot();
+	}
+
+
 	experimentGovernor.update();
 
 	//if (showInstructions) {
@@ -738,10 +769,6 @@ void testApp::draw(){
 	//	}
 	//}
 
-	// Draw oscilloscope data
-	if (showOscilloscope) {
-		scopeWin.plot();
-	}
 
 	if (showScreenEntrainment) {
 		//freqOutThread.lock(); 

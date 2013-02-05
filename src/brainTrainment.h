@@ -254,6 +254,17 @@ static const float ENTRAINMENT_DEBUGGING[nENTRAINMENT_DEBUGGING][2] = { // { fre
 };
 
 // Simple cycle to debug timing
+static const int nENTRAINMENT_SHOW = 5;
+static const float ENTRAINMENT_SHOW[nENTRAINMENT_SHOW][2] = { // { frequency, duration(seconds) }
+	{GAMMA, 15}, //1
+	{BETA,	15}, //2
+	{ALPHA,	15}, //3
+	{THETA, 15}, //4
+	{DELTA, 15}, //5
+};
+
+
+// Simple cycle to debug timing
 static const int nENTRAINMENT_DEBUGGING2 = 5;
 static const float ENTRAINMENT_DEBUGGING2[nENTRAINMENT_DEBUGGING][2] = { // { frequency, duration(seconds) }
 	{GAMMA, 10}, //1
