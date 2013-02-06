@@ -763,7 +763,7 @@ void testApp::newExperimentState(string & state){
 	}
 	if (state == ExperimentGovernor::getStateString(ExperimentGovernor::StimulusPresentation)) {
 		freqOutThread.lock();
-		freqOutThread.setFreqCycle(settings.freqCycleExp);
+		freqOutThread.setFreqCycle(ofRandomize(settings.freqCycleExp));
 		freqOutThread.resetFreqCycle();
 		freqOutThread.unlock();
 	}
