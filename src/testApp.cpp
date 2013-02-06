@@ -183,6 +183,7 @@ void testApp::setup() {
 	drawTime = myGetElapsedTimeMillis();
 
 	ofSetFullscreen(true);
+	ofHideCursor();
 }
 
 //--------------------------------------------------------------
