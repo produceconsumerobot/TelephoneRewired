@@ -14,10 +14,10 @@ void testApp::setup() {
 
 	// Zeo Port
 	string zeoPort = settings.zeoPort; 
-    
-    // Midi Port
+
+	// Midi Port
 	int midiPort = settings.midiPort;
-    
+
 	// Log Directory
 	logDirPath = settings.logDirPath; 
 
@@ -58,9 +58,9 @@ void testApp::setup() {
 
 	// Set the brainwave entrainment frequencies cycle... see brainTrainment.h
 	freqOutThread.setFreqCycle(settings.freqCycle);
-	
+
 	freqOutThread.printFreqCycle();
-	
+
 	// Setup arduino LED output pins
 	const int nEntrainmentLedPins = 3;
 	const int entrainmentLedPins[nEntrainmentLedPins] = {9, 10, 11};
@@ -116,7 +116,7 @@ void testApp::setup() {
 	// Setup Instruction Player
 	if (showInstructions) {
 		instructionsPlayer = InstructionsPlayer(nInstructionPages, instructionsTimeoutDelay);
-		
+
 		// TODO: Setup Listeners
 		ofAddListener(instructionsPlayer.newPage, this, &testApp::newInstructionsPage);
 		ofAddListener(instructionsPlayer.drawPage, this, &testApp::drawInstructionsPage);
@@ -143,7 +143,7 @@ void testApp::setup() {
 
 		experimentGovernor.setStimulusPlayer(&stimulusPlayer);
 	}
-	
+
 	// Startup screen display parameters
 	ofBackground(0, 0, 0);
 
@@ -160,14 +160,14 @@ void testApp::setup() {
 
 
 	//participantNumber = 0;
-	
+
 	// **** Start threads **** //
 	// DO THIS LAST OR YOU NEED TO LOCK() ON SETUP FUNCTIONS
 
 	// Start outputs thread
 	if (!showScreenEntrainment && // If screen entrainment, we'll manage timing in the main thread
 		(showLedEntrainment || playMidi)) {
-		freqOutThread.startThread(true, false);
+			freqOutThread.startThread(true, false);
 	}
 
 	// Start zeo thread
@@ -189,7 +189,7 @@ void testApp::setup() {
 void testApp::SetupOscilloscopes(){
 	// Setup oscilloscopes
 	int nScopes = 4;
-//	ofPoint min = ofPoint(0., 10.);
+	//	ofPoint min = ofPoint(0., 10.);
 	ofPoint min = ofPoint(-100., 10.);
 	//ofPoint max = ofPoint(ofGetWindowSize().x/2, ofGetWindowSize().y/2-10);
 	ofPoint max = ofPoint(ofGetWindowSize().x*1.6, ofGetWindowSize().y*6-10);
@@ -200,22 +200,22 @@ void testApp::SetupOscilloscopes(){
 	float f = 0.1;
 	{ // Filtered EEG Scope
 		const int nVariables = 1;
-//		ofColor colors[nVariables] = {ofColor(0,200,0)};
-//		ofColor colors[nVariables] = {ofColor(0,200,0)*f};
+		//		ofColor colors[nVariables] = {ofColor(0,200,0)};
+		//		ofColor colors[nVariables] = {ofColor(0,200,0)*f};
 		ofColor colors[nVariables] = {ofColor(200,200,200)*f};
-//		ofColor colors[nVariables] = {c};
+		//		ofColor colors[nVariables] = {c};
 		string names[nVariables] = {"Filt EEG"};
 		if (scopeWin.scopes.size() > 0) 
 			scopeWin.scopes.at(0).setup(rawTimeWindow, ZeoParser::RAW_DATA_LEN, names, colors, nVariables, 3., 0.);
 	}
-	
+
 	{ // Power Data Scope
 		const int nVariables = ZeoParser::NUM_FREQS;
-//		ofColor colors[nVariables] = {ofColor(200,0,0), ofColor(0,200,0), ofColor(0,0,200), 
-//			ofColor(200,200,0), ofColor(200,0,200), ofColor(0,200,200), ofColor(100,100,100)};
+		//		ofColor colors[nVariables] = {ofColor(200,0,0), ofColor(0,200,0), ofColor(0,0,200), 
+		//			ofColor(200,200,0), ofColor(200,0,200), ofColor(0,200,200), ofColor(100,100,100)};
 		ofColor colors[nVariables] = {ofColor(200,0,0)*f, ofColor(0,200,0)*f, ofColor(0,0,200)*f, 
 			ofColor(200,200,0)*f, ofColor(200,0,200)*f, ofColor(0,200,200)*f, ofColor(100,100,100)*f};
-//		ofColor colors[nVariables] = {c,c,c,c,c,c,c};
+		//		ofColor colors[nVariables] = {c,c,c,c,c,c,c};
 		string names[nVariables];
 		for (int i=0; i<nVariables; i++) {
 			names[i] = ZeoParser::labels[i];
@@ -225,25 +225,25 @@ void testApp::SetupOscilloscopes(){
 	}
 	{ // Entrainment Signal Scope
 		const int nVariables = NUM_ENTRAINMENT_FREQS;
-//		ofColor colors[nVariables] = {ofColor(200,0,0), ofColor(0,200,0), ofColor(0,0,200), 
-//			ofColor(200,200,0), ofColor(100,100,100)};
+		//		ofColor colors[nVariables] = {ofColor(200,0,0), ofColor(0,200,0), ofColor(0,0,200), 
+		//			ofColor(200,200,0), ofColor(100,100,100)};
 		ofColor colors[nVariables] = {ofColor(200,0,0)*f, ofColor(0,200,0)*f, ofColor(0,0,200)*f, 
 			ofColor(200,200,0)*f, ofColor(100,100,100)*f};
-//		ofColor colors[nVariables] = {c,c,c,c,c};
+		//		ofColor colors[nVariables] = {c,c,c,c,c};
 		string names[nVariables] = {"DELTA", "THETA", "ALPHA", "BETA", "GAMMA"};
 		if (scopeWin.scopes.size() > 2) 
 			scopeWin.scopes.at(2).setup(powerTimeWindow, 1, names, colors, nVariables, 500, -350.);
 	}
 	{ // Data Reliability Scope
 		const int nVariables = 3;
-//		ofColor colors[nVariables] = {ofColor(200,0,0), ofColor(0,200,0), ofColor(0,0,200)};
+		//		ofColor colors[nVariables] = {ofColor(200,0,0), ofColor(0,200,0), ofColor(0,0,200)};
 		ofColor colors[nVariables] = {ofColor(200,0,0)*f, ofColor(0,200,0)*f, ofColor(0,0,200)*f};
-//		ofColor colors[nVariables] = {c,c,c};
+		//		ofColor colors[nVariables] = {c,c,c};
 		string names[nVariables] = {"Impedance", "SQI", "Signal"};
 		if (scopeWin.scopes.size() > 3) 
 			scopeWin.scopes.at(3).setup(powerTimeWindow, 1, names, colors, nVariables, 0.5, -350.);
 	}
-	
+
 	// Initialize Oscilloscope data arrays	
 	zeoRawData.resize(1, vector<float>(ZeoParser::RAW_DATA_LEN, 0.));
 	zeoFiltData.resize(1, vector<float>(ZeoParser::RAW_DATA_LEN, 0.));
@@ -258,7 +258,8 @@ void testApp::SetupOscilloscopes(){
 void testApp::drawInstructionsPage(int & pageNum) {
 	if (showInstructions) {
 		int i = pageNum;
-				switch (i) {
+		switch (i) 
+		{
 		case 0:
 			{
 				ofTrueTypeFont font;
@@ -369,89 +370,6 @@ void testApp::drawInstructionsPage(int & pageNum) {
 				break;
 			}
 		default:
-			break;
-		}
-	}
-
-//--------------------------------------------------------------
-// Callback function to show different timed pages
-void testApp::drawTimedPage(int & pageNum) {
-	if (showInstructions) {
-		switch (pageNum) {
-		case TimedPagePlayer::Congratulations:
-			{
-				ofTrueTypeFont font;
-				font.loadFont("verdana.ttf", 15, true, true);
-				ofColor fontColor(255,255,255);
-				ofPoint stimulusCenter(ofGetWindowWidth()/2, ofGetWindowHeight()/2);
-
-				std::stringstream ss;
-				ss << "Congratulations on completing TELEPHONE REWIRED.\n";
-				ss << "Please remove the Zeo and return it to the stand. Then go outside to complete the \n";
-				ss << "experiment by entering your code on the survey computer. \n";
-				ss << "\n";
-				ss << "Your code number is: " << experimentGovernor.getParticipantID();
-				string data1 = ss.str();//"this is page 3";
-				//string data1 = "Please press the ";
-				//string data2 = "GREEN button to begin";
-				ofPushMatrix();
-				ofPushStyle();
-				ofRectangle bounds1 = font.getStringBoundingBox(data1, 0, 0);
-				//ofRectangle bounds2 = font.getStringBoundingBox(data2, 0, 0);
-				ofTranslate(-bounds1.width/2, -bounds1.height / 2, 0);
-				ofSetColor(fontColor);
-				font.drawString(data1, stimulusCenter.x, stimulusCenter.y);
-				ofPopStyle();
-				ofPopMatrix();
-			}
-			break;
-		case TimedPagePlayer::ThankYou:
-			{
-				ofTrueTypeFont font;
-				font.loadFont("verdana.ttf", 20, true, true);
-				ofColor fontColor(0,220,0);
-				ofPoint stimulusCenter(ofGetWindowWidth()/2, ofGetWindowHeight()/2);
-
-				std::stringstream ss;
-				ss << "Thank You!\n" ;
-				string data1 = ss.str();//"this is page 3";
-				//string data1 = "Please press the ";
-				//string data2 = "GREEN button to begin";
-				ofPushMatrix();
-				ofPushStyle();
-				ofRectangle bounds1 = font.getStringBoundingBox(data1, 0, 0);
-				//ofRectangle bounds2 = font.getStringBoundingBox(data2, 0, 0);
-				ofTranslate(-bounds1.width/2, bounds1.height / 2, 0);
-				ofSetColor(fontColor);
-				font.drawString(data1, stimulusCenter.x, stimulusCenter.y);
-				ofPopStyle();
-				ofPopMatrix();
-			}
-			break;		
-		case TimedPagePlayer::BlankPage:
-			{
-				ofTrueTypeFont font;
-				font.loadFont("verdana.ttf", 20, true, true);
-				ofColor fontColor(220,220,220);
-				ofPoint stimulusCenter(ofGetWindowWidth()/2, ofGetWindowHeight()/2);
-
-				std::stringstream ss;
-				ss << "...Loading data...\n" ;
-				string data1 = ss.str();//"this is page 3";
-				//string data1 = "Please press the ";
-				//string data2 = "GREEN button to begin";
-				ofPushMatrix();
-				ofPushStyle();
-				ofRectangle bounds1 = font.getStringBoundingBox(data1, 0, 0);
-				//ofRectangle bounds2 = font.getStringBoundingBox(data2, 0, 0);
-				ofTranslate(-bounds1.width/2, bounds1.height / 2, 0);
-				ofSetColor(fontColor);
-				font.drawString(data1, stimulusCenter.x, stimulusCenter.y);
-				ofPopStyle();
-				ofPopMatrix();
-			}
-		default:
-			// blank page
 			break;
 		}
 	}
@@ -602,7 +520,7 @@ void testApp::newZeoRawData(bool & ready){
 		scopeWin.scopes.at(0).updateData(zeoFiltData);
 	}
 
-	
+
 	// Get Zeo raw data
 	zeoThread.lock();
 	zeoRawData.at(0) = zeoThread.getZeoParser().getRawData();
@@ -763,7 +681,9 @@ void testApp::newExperimentState(string & state){
 	}
 	if (state == ExperimentGovernor::getStateString(ExperimentGovernor::StimulusPresentation)) {
 		freqOutThread.lock();
-		freqOutThread.setFreqCycle(ofRandomize(settings.freqCycleExp));
+		std::vector<FreqOutThread::freqInterval> temp = settings.freqCycleExp;
+		ofRandomize(temp);
+		freqOutThread.setFreqCycle(temp);
 		freqOutThread.resetFreqCycle();
 		freqOutThread.unlock();
 	}
@@ -787,7 +707,7 @@ void testApp::newParticipant(unsigned long & participantID){
 		ss << myGetElapsedTimeMillis() << "," << vLogFormat << "," << PARTICIPANT_ID_CODE << 
 			"," << participantID << ",\n";
 		logger.loggerQueue.push(ss.str());
-		
+
 		std::stringstream ss2;
 		ss2 << myGetElapsedTimeMillis() << "," << vLogFormat << "," << PARTICIPANT_NUMBER_CODE << 
 			"," << experimentGovernor.reverseParticipantID(participantID) << ",\n";
@@ -828,15 +748,15 @@ void testApp::draw(){
 #endif
 	/*
 	if (logData) {
-		freqOutThread.lock();
-		bool outOn = freqOutThread.getCurrentOutState();
-		float freq = freqOutThread.getCurrentFreq();
-		freqOutThread.unlock();
+	freqOutThread.lock();
+	bool outOn = freqOutThread.getCurrentOutState();
+	float freq = freqOutThread.getCurrentFreq();
+	freqOutThread.unlock();
 
-		logger.lock();
-		logger.push_back(myGetElapsedTimeMillis(), LoggerData::IS_ENTRAINMENT_ON, outOn);
-		logger.push_back(myGetElapsedTimeMillis(), LoggerData::ENTRAINMENT_FREQ, freq);
-		logger.unlock();
+	logger.lock();
+	logger.push_back(myGetElapsedTimeMillis(), LoggerData::IS_ENTRAINMENT_ON, outOn);
+	logger.push_back(myGetElapsedTimeMillis(), LoggerData::ENTRAINMENT_FREQ, freq);
+	logger.unlock();
 	}
 	*/
 	if (checkButtonPresses) {
@@ -885,9 +805,9 @@ void testApp::exit(){
 #ifdef DEBUG_PRINT 
 	printf("exit()\n");
 #endif
-    zeoThread.waitForThread(true);
-    freqOutThread.waitForThread(true);
-    logger.waitForThread(true);
+	zeoThread.waitForThread(true);
+	freqOutThread.waitForThread(true);
+	logger.waitForThread(true);
 
 	//freqOutThread.lock();
 	//freqOutThread.unsetMidi();
@@ -907,26 +827,26 @@ void testApp::keyPressed(int key){
 //--------------------------------------------------------------
 void testApp::keyReleased(int key){
 	if (((char) key) == '+') {
-        midiMapMode = !midiMapMode;
+		midiMapMode = !midiMapMode;
 		freqOutThread.lock();
 		freqOutThread.toggleMidiOut();
 		freqOutThread.unlock();
-    }
+	}
 	if (((char) key) == '1') {
-        midiout.sendControlChange(midiChannel, midiId, midiValue);
-        printf("1");
-    } 
+		midiout.sendControlChange(midiChannel, midiId, midiValue);
+		printf("1");
+	} 
 	if (((char) key) == '2') {
-        midiout.sendControlChange(midiChannel, midiId+1, midiValue);
-        printf("2");
+		midiout.sendControlChange(midiChannel, midiId+1, midiValue);
+		printf("2");
 	}
 	if (((char) key) == '3') {
-        midiout.sendNoteOn(midiChannel, midiId+1, midiValue);
-        printf("3");
+		midiout.sendNoteOn(midiChannel, midiId+1, midiValue);
+		printf("3");
 	}
 	if (((char) key) == '4') {
-        midiout.sendNoteOff(midiChannel, midiId+1, midiValue);
-        printf("3");
+		midiout.sendNoteOff(midiChannel, midiId+1, midiValue);
+		printf("3");
 	}
 	if ( key == 'f') {
 		ofToggleFullscreen();
