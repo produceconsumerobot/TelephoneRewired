@@ -302,6 +302,9 @@ void testApp::drawInstructionsPage(int & pageNum) {
 				ofColor fontColor(255,255,255);
 				ofPoint stimulusCenter(ofGetWindowWidth()/2, ofGetWindowHeight()/2);
 
+				ofImage myImage("zeo_pic.png");
+				myImage.draw(ofGetWindowWidth()/2, ofGetWindowHeight()/2+120, 250, 250);
+
 				std::stringstream ss;
 				ss << "TELEPHONE REWIRED measures and records your brain activity (EEG) using a Zeo \n";
 				ss << "headband monitor. Please put on the headband now, and keep it placed centrally \n";
