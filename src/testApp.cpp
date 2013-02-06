@@ -195,10 +195,11 @@ void testApp::SetupOscilloscopes(){
 	//ofPoint max = ofPoint(ofGetWindowSize().x/2, ofGetWindowSize().y/2-10);
 	ofPoint max = ofPoint(ofGetWindowSize().x*1.6, ofGetWindowSize().y*6-10);
 	scopeWin = ofxMultiScope(nScopes, min, max);
-	int rawTimeWindow = 10;
+	rawTimeWindow = 10;
+	eegPlotCounter = 0;
 	int powerTimeWindow = 300;
 	ofColor c(20,20,20);
-	float f = 0.1;
+	float f = 0.05;
 	{ // Filtered EEG Scope
 		const int nVariables = 1;
 		//		ofColor colors[nVariables] = {ofColor(0,200,0)};
@@ -775,7 +776,10 @@ void testApp::draw(){
 
 	// Draw oscilloscope data
 	if (showOscilloscope) {
-		scopeWin.plot();
+		//if (++eegPlotCounter == rawTimeWindow) {
+			scopeWin.plot();
+		//	eegPlotCounter = 0;
+		//}
 	}
 
 

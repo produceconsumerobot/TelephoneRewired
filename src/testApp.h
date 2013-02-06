@@ -56,6 +56,8 @@ class testApp : public ofBaseApp{
 		LoggerThread logger;
 		string logDirPath;
 
+		int rawTimeWindow;
+		int eegPlotCounter;
 
 		// Player to show stimuli
 		StimulusPlayer stimulusPlayer;
