@@ -40,6 +40,9 @@ class testApp : public ofBaseApp{
 		bool playMidi;
 		bool logData;
 		bool readEEG;
+		bool fakeEEG;
+
+		int nScopes;
 
 		// Input Arduino for button presses
 		ofArduino inputArduino;

@@ -40,6 +40,7 @@ void testApp::setup() {
 	readEEG = settings.readEEG; // requires Zeo
 	showOscilloscope = settings.showOscilloscope; // sloooows down screen drawing
 	logData = settings.logData; 
+	fakeEEG = true;
 
 	// Experiment Timing Variables
 	float stimulusOnTime = settings.stimulusOnTime; // Seconds
@@ -204,7 +205,8 @@ void testApp::SetupOscilloscopes(){
 		ofColor colors[nVariables] = {ofColor(200,200,200)*f};
 //		ofColor colors[nVariables] = {c};
 		string names[nVariables] = {"Filt EEG"};
-		scopeWin.scopes.at(0).setup(rawTimeWindow, ZeoParser::RAW_DATA_LEN, names, colors, nVariables, 3., 0.);
+		if (scopeWin.scopes.size() > 0) 
+			scopeWin.scopes.at(0).setup(rawTimeWindow, ZeoParser::RAW_DATA_LEN, names, colors, nVariables, 3., 0.);
 	}
 	
 	{ // Power Data Scope
@@ -218,7 +220,8 @@ void testApp::SetupOscilloscopes(){
 		for (int i=0; i<nVariables; i++) {
 			names[i] = ZeoParser::labels[i];
 		}
-		scopeWin.scopes.at(1).setup(powerTimeWindow, 1, names, colors, nVariables, 0.07, -350.);
+		if (scopeWin.scopes.size() > 1) 
+			scopeWin.scopes.at(1).setup(powerTimeWindow, 1, names, colors, nVariables, 0.07, -350.);
 	}
 	{ // Entrainment Signal Scope
 		const int nVariables = NUM_ENTRAINMENT_FREQS;
@@ -228,7 +231,8 @@ void testApp::SetupOscilloscopes(){
 			ofColor(200,200,0)*f, ofColor(100,100,100)*f};
 //		ofColor colors[nVariables] = {c,c,c,c,c};
 		string names[nVariables] = {"DELTA", "THETA", "ALPHA", "BETA", "GAMMA"};
-		scopeWin.scopes.at(2).setup(powerTimeWindow, 1, names, colors, nVariables, 500, -350.);
+		if (scopeWin.scopes.size() > 2) 
+			scopeWin.scopes.at(2).setup(powerTimeWindow, 1, names, colors, nVariables, 500, -350.);
 	}
 	{ // Data Reliability Scope
 		const int nVariables = 3;
@@ -236,7 +240,8 @@ void testApp::SetupOscilloscopes(){
 		ofColor colors[nVariables] = {ofColor(200,0,0)*f, ofColor(0,200,0)*f, ofColor(0,0,200)*f};
 //		ofColor colors[nVariables] = {c,c,c};
 		string names[nVariables] = {"Impedance", "SQI", "Signal"};
-		scopeWin.scopes.at(3).setup(powerTimeWindow, 1, names, colors, nVariables, 0.5, -350.);
+		if (scopeWin.scopes.size() > 3) 
+			scopeWin.scopes.at(3).setup(powerTimeWindow, 1, names, colors, nVariables, 0.5, -350.);
 	}
 	
 	// Initialize Oscilloscope data arrays	
@@ -262,8 +267,17 @@ void testApp::drawInstructionsPage(int & pageNum) {
 				ofPoint stimulusCenter(ofGetWindowWidth()/2, ofGetWindowHeight()/2);
 
 				std::stringstream ss;
-				ss << "        TELEPHONE REWIRED\n\n";
-				ss << "Please push the green button to begin.";
+				ss << "Welcome to TELEPHONE REWIRED, where your brain's oscillations will\n";
+				ss << "synchronize with flashing lights and sound. We invite you to participate in an \n";
+				ss << "experiment studying the impact of this installation on your brainwaves and how \n";
+				ss << "that affects your attention and memory.  This will take about 6 minutes in this room\n";
+				ss << "and 5 more minutes at the desk outside.\n";
+				ss << "\n";
+				ss << "TELEPHONE REWIRED's lights and sound are designed to mimic frequencies\n";
+				ss << "ordinarily created by neurons in your brain.  After several minutes in this room, \n";
+				ss << "your neurons will be in tune with the installation, firing in a similar pattern. \n";
+				ss << "\n";
+				ss << "To participate in the experiment, please push the green button.\n";
 				string data1 = ss.str();
 				//string data1 = "Please press the ";
 				//string data2 = "GREEN button to begin";
