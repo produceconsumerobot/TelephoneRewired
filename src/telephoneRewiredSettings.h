@@ -74,16 +74,16 @@ public:
 
 
 		// Variables to control output functionality
-		checkButtonPresses = true; // requires Arduino
+		checkButtonPresses = false; // requires Arduino
 		showInstructions = true;
 		showStimuli = true;
 
 		showScreenEntrainment = false;
-		showLedEntrainment = true; // requires Arduino
+		showLedEntrainment = false; // requires Arduino
 		playMidi = true;
 
-		readEEG = true; // requires Zeo
-		showOscilloscope = true; // sloooows down screen drawing
+		readEEG = false; // requires Zeo
+		showOscilloscope = false; // sloooows down screen drawing
 		logData = true;
 
 		// Experiment Timing Variables
