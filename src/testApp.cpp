@@ -258,33 +258,33 @@ void testApp::SetupOscilloscopes(){
 void testApp::drawInstructionsPage(int & pageNum) {
 	if (showInstructions) {
 		int i = pageNum;
-		switch (i) {
+				switch (i) {
 		case 0:
 			{
 				ofTrueTypeFont font;
-				font.loadFont("verdana.ttf", 20, true, true);
+				font.loadFont("verdana.ttf", 15, true, true);
 				ofColor fontColor(255,255,255);
 				ofPoint stimulusCenter(ofGetWindowWidth()/2, ofGetWindowHeight()/2);
 
 				std::stringstream ss;
-				ss << "Welcome to TELEPHONE REWIRED, where your brain's oscillations will\n";
-				ss << "synchronize with flashing lights and sound. We invite you to participate in an \n";
-				ss << "experiment studying the impact of this installation on your brainwaves and how \n";
-				ss << "that affects your attention and memory.  This will take about 6 minutes in this room\n";
-				ss << "and 5 more minutes at the desk outside.\n";
+				ss << "Welcome to TELEPHONE REWIRED, an immersive audiovisual art installation and\n";
+				ss << "scientific experiment examining the role of oscillations in the brain and the future \n";
+				ss << "of human cognition. The lights and sound in the room are designed to mimic \n";
+				ss << "frequencies ordinarily created by neurons in your brain.  After several minutes of \n";
+				ss << "experiencing TELEPHONE REWIRED your neurons will begin to synchronize with \n";
+				ss << "the installation, firing in a similar pattern. \n";
 				ss << "\n";
-				ss << "TELEPHONE REWIRED's lights and sound are designed to mimic frequencies\n";
-				ss << "ordinarily created by neurons in your brain.  After several minutes in this room, \n";
-				ss << "your neurons will be in tune with the installation, firing in a similar pattern. \n";
+				ss << "We invite you to participate in an experiment studying how this installation \n";
+				ss << "changes your EEG oscillations (brainwaves) and how it affects your perception, \n";
+				ss << "attention and memory.  This will take about 6 minutes in this room and 5 more \n";
+				ss << "minutes at the desk outside.\n";
 				ss << "\n";
 				ss << "To participate in the experiment, please push the green button.\n";
 				string data1 = ss.str();
-				//string data1 = "Please press the ";
-				//string data2 = "GREEN button to begin";
+
 				ofPushMatrix();
 				ofPushStyle();
 				ofRectangle bounds1 = font.getStringBoundingBox(data1, 0, 0);
-				//ofRectangle bounds2 = font.getStringBoundingBox(data2, 0, 0);
 				ofTranslate(-bounds1.width/2, -bounds1.height / 2, 0);
 				ofSetColor(fontColor);
 				font.drawString(data1, stimulusCenter.x, stimulusCenter.y);
@@ -301,52 +301,96 @@ void testApp::drawInstructionsPage(int & pageNum) {
 				ofPoint stimulusCenter(ofGetWindowWidth()/2, ofGetWindowHeight()/2);
 
 				std::stringstream ss;
-				ss << "Welcome to TELEPHONE REWIRED, where your brain\'s oscillations will be\n";
-				ss << "entrained (changed) by flashing lights and sound. In addition to experiencing the\n";
-				ss << "installation, you can participate in an experiment.  This will take about 15 minutes \n";
-				ss << "in this room and 5 more minutes outside. To do so, you will wear a Zeo EEG \n";
-				ss << "monitor so we can measure your brainwave oscillations while you experience the \n";
-				ss << "installation.  You will also be presented with spoken and printed words.  After the \n";
-				ss << "presentation ends, you will answer a few questions about the words and your \n";
-				ss << "experience in general.\n";
-				ss << "\n";				
-				ss << "Special thanks to Mitch Altman for sharing his Brain Machine entrainment protocol.\n";
+				ss << "TELEPHONE REWIRED measures and records your brain activity (EEG) using a Zeo \n";
+				ss << "headband monitor. Please put on the headband now, and keep it placed centrally \n";
+				ss << "on your forehead throughout the experiment (see picture). \n";
 				ss << "\n";
-				ss << "Please push the green button to continue.\n";
-
+				ss << "We are also studying how quickly you respond when words appear on the screen \n";
+				ss << "or play through the speakers.  Please keep your hand on the green button \n";
+				ss << "throughout the experiment and press it as soon as you hear or see a word.\n";
+				ss << "\n";
+				ss << "Your memory of the words will also be tested at the desk outside, so please pay \n";
+				ss << "attention and remember as many as you can.\n";
+				ss << "\n";
+				ss << "Although you are participating in a scientific experiment, we hope you will also be \n";
+				ss << "able to enjoy the experience of altering your neuronal oscillations!\n";
+				ss << "\n";
+				ss << "Press the green button to continue.\n";
 				string data1 = ss.str();
 
 				ofPushMatrix();
 				ofPushStyle();
 				ofRectangle bounds1 = font.getStringBoundingBox(data1, 0, 0);
-				//ofRectangle bounds2 = font.getStringBoundingBox(data2, 0, 0);
 				ofTranslate(-bounds1.width/2, -bounds1.height / 2, 0);
 				ofSetColor(fontColor);
 				font.drawString(data1, stimulusCenter.x, stimulusCenter.y);
 				ofPopStyle();
 				ofPopMatrix();
+
 				break;
 			}
 		case 2:
-			{		
+			{
 				ofTrueTypeFont font;
 				font.loadFont("verdana.ttf", 15, true, true);
 				ofColor fontColor(255,255,255);
 				ofPoint stimulusCenter(ofGetWindowWidth()/2, ofGetWindowHeight()/2);
 
 				std::stringstream ss;
-				ss << "Before you begin, put on the Zeo EEG headband.\n";
-				ss << "Whenever you see or hear a word, press the green button as quickly as you can.\n";
-				ss << "When you finish (about 15 minutes) you will be told that you have completed this \n";
-				ss << "portion. Then you can remove the Zeo and go outside. To complete the experiment, \n";
-				ss << "please enter your code on the computer outside so that you can answer some \n";
-				ss << "questions about what you have experienced.\n";
+				ss << "Before you begin, make sure you are wearing the Zeo EEG headband and have \n";
+				ss << "your hand on the green button.\n";
+				ss << "\n";
+				ss << "When the screen indicates that you are done with this portion of the experiment, \n";
+				ss << "you can remove the EEG headband. Then you may go outside to complete the \n";
+				ss << "experiment with a survey on a different computer by entering the code below so \n";
+				ss << "that your answers can be linked with your brain activity (EEG).\n";
 				ss << "\n";
 				ss << "Your code number is: " << experimentGovernor.getParticipantID() << "\n";
-				ss << "Please write it down or keep track of it so you can complete the assessment \n";
-				ss << "outside.\n";
+				ss << "Please write it down now.\n";
 				ss << "\n";
-				ss << "Please push the green button to begin the experiment.\n";
+				ss << "Telephone Rewired was created by:\n";
+				ss << "LoVid - http://lovid.org/\n";
+				ss << "Sean Montgomery - http://www.produceconsumerobot.com/\n";
+				ss << "Special thanks to Mitch Alman for sharing his Brain Machine entrainment patterns \n";
+				ss << "with the open source community.\n";
+				ss << "\n";
+				ss << "Push the green button to begin the experiment.\n";
+				string data1 = ss.str();
+
+				ofPushMatrix();
+				ofPushStyle();
+				ofRectangle bounds1 = font.getStringBoundingBox(data1, 0, 0);
+				ofTranslate(-bounds1.width/2, -bounds1.height / 2, 0);
+				ofSetColor(fontColor);
+				font.drawString(data1, stimulusCenter.x, stimulusCenter.y);
+				ofPopStyle();
+				ofPopMatrix();
+
+				break;
+			}
+		default:
+			break;
+		}
+	}
+
+//--------------------------------------------------------------
+// Callback function to show different timed pages
+void testApp::drawTimedPage(int & pageNum) {
+	if (showInstructions) {
+		switch (pageNum) {
+		case TimedPagePlayer::Congratulations:
+			{
+				ofTrueTypeFont font;
+				font.loadFont("verdana.ttf", 15, true, true);
+				ofColor fontColor(255,255,255);
+				ofPoint stimulusCenter(ofGetWindowWidth()/2, ofGetWindowHeight()/2);
+
+				std::stringstream ss;
+				ss << "Congratulations on completing TELEPHONE REWIRED.\n";
+				ss << "Please remove the Zeo and return it to the stand. Then go outside to complete the \n";
+				ss << "experiment by entering your code on the survey computer. \n";
+				ss << "\n";
+				ss << "Your code number is: " << experimentGovernor.getParticipantID();
 				string data1 = ss.str();//"this is page 3";
 				//string data1 = "Please press the ";
 				//string data2 = "GREEN button to begin";
@@ -359,16 +403,55 @@ void testApp::drawInstructionsPage(int & pageNum) {
 				font.drawString(data1, stimulusCenter.x, stimulusCenter.y);
 				ofPopStyle();
 				ofPopMatrix();
+			}
+			break;
+		case TimedPagePlayer::ThankYou:
+			{
+				ofTrueTypeFont font;
+				font.loadFont("verdana.ttf", 20, true, true);
+				ofColor fontColor(0,220,0);
+				ofPoint stimulusCenter(ofGetWindowWidth()/2, ofGetWindowHeight()/2);
 
-				ofImage image;
-				image.loadImage("data/zeo_pic.png");
-				int width = 250;
-				int offset = 50;
-				image.draw(ofGetWindowWidth()-width-offset , ofGetWindowHeight()-width-offset , width, width);
+				std::stringstream ss;
+				ss << "Thank You!\n" ;
+				string data1 = ss.str();//"this is page 3";
+				//string data1 = "Please press the ";
+				//string data2 = "GREEN button to begin";
+				ofPushMatrix();
+				ofPushStyle();
+				ofRectangle bounds1 = font.getStringBoundingBox(data1, 0, 0);
+				//ofRectangle bounds2 = font.getStringBoundingBox(data2, 0, 0);
+				ofTranslate(-bounds1.width/2, bounds1.height / 2, 0);
+				ofSetColor(fontColor);
+				font.drawString(data1, stimulusCenter.x, stimulusCenter.y);
+				ofPopStyle();
+				ofPopMatrix();
+			}
+			break;		
+		case TimedPagePlayer::BlankPage:
+			{
+				ofTrueTypeFont font;
+				font.loadFont("verdana.ttf", 20, true, true);
+				ofColor fontColor(220,220,220);
+				ofPoint stimulusCenter(ofGetWindowWidth()/2, ofGetWindowHeight()/2);
 
-				break;
+				std::stringstream ss;
+				ss << "...Loading data...\n" ;
+				string data1 = ss.str();//"this is page 3";
+				//string data1 = "Please press the ";
+				//string data2 = "GREEN button to begin";
+				ofPushMatrix();
+				ofPushStyle();
+				ofRectangle bounds1 = font.getStringBoundingBox(data1, 0, 0);
+				//ofRectangle bounds2 = font.getStringBoundingBox(data2, 0, 0);
+				ofTranslate(-bounds1.width/2, bounds1.height / 2, 0);
+				ofSetColor(fontColor);
+				font.drawString(data1, stimulusCenter.x, stimulusCenter.y);
+				ofPopStyle();
+				ofPopMatrix();
 			}
 		default:
+			// blank page
 			break;
 		}
 	}
