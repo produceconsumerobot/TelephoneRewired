@@ -800,7 +800,7 @@ void testApp::draw(){
 		//sleep(1);
 	}
 
-	cout << "time=" << myGetElapsedTimeMillis() << ", diff=" << myGetElapsedTimeMillis() - drawTime << "\n";
+	//cout << "time=" << myGetElapsedTimeMillis() << ", diff=" << myGetElapsedTimeMillis() - drawTime << "\n";
 	drawTime = myGetElapsedTimeMillis();
 }
 
