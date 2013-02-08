@@ -357,7 +357,7 @@ void testApp::drawInstructionsPage(int & pageNum) {
 				ss << "Telephone Rewired was created by:\n";
 				ss << "LoVid - http://lovid.org/\n";
 				ss << "Sean Montgomery - http://www.produceconsumerobot.com/\n";
-				ss << "Special thanks to Mitch Alman for sharing his Brain Machine entrainment patterns \n";
+				ss << "Special thanks to Mitch Altman for sharing his Brain Machine entrainment patterns \n";
 				ss << "with the open source community.\n";
 				ss << "\n";
 				ss << "Push the green button to begin the experiment.\n";
