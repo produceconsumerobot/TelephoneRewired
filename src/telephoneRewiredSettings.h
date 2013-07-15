@@ -30,6 +30,7 @@ public:
 	bool showInstructions;
 	bool showStimuli;
 	bool checkButtonPresses;
+	bool triggeredEntrainmentCycle;
 	bool showOscilloscope;
 	bool showScreenEntrainment;
 	bool showLedEntrainment;
@@ -74,17 +75,18 @@ public:
 
 
 		// Variables to control output functionality
-		checkButtonPresses = true; // requires Arduino
-		showInstructions = true;
-		showStimuli = true;
+		checkButtonPresses = false; // requires Arduino
+		showInstructions = false;
+		showStimuli = false;
+		triggeredEntrainmentCycle = true; 
 
 		showScreenEntrainment = false;
-		showLedEntrainment = true; // requires Arduino
-		playMidi = true;
+		showLedEntrainment = false; // requires Arduino
+		playMidi = false;
 
-		readEEG = true; // requires Zeo
+		readEEG = false; // requires Zeo
 		showOscilloscope = false; // sloooows down screen drawing
-		logData = true;
+		logData = false;
 
 		// Experiment Timing Variables
 		stimulusOnTime =				.5;		// Seconds

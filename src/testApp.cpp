@@ -595,9 +595,9 @@ void testApp::newZeoSliceData(bool & ready){
 	}
 
 	if (showOscilloscope) {
-		freqOutThread.lock();
+		if (freqOutThread.isThreadRunning()) freqOutThread.lock();
 		float freq = freqOutThread.getCurrentFreq();
-		freqOutThread.unlock();
+		if (freqOutThread.isThreadRunning()) freqOutThread.unlock();
 		// Plot the current entrainment frequency
 		plotEntrainmentFreqData(freq);
 	}
@@ -685,18 +685,18 @@ void testApp::newExperimentState(string & state){
 		logger.unlock();
 	}
 	if (state == ExperimentGovernor::getStateString(ExperimentGovernor::StimulusPresentation)) {
-		freqOutThread.lock();
+		if (freqOutThread.isThreadRunning()) freqOutThread.lock();
 		std::vector<FreqOutThread::freqInterval> temp = settings.freqCycleExp;
 		ofRandomize(temp);
 		freqOutThread.setFreqCycle(temp);
 		freqOutThread.resetFreqCycle();
-		freqOutThread.unlock();
+		if (freqOutThread.isThreadRunning()) freqOutThread.unlock();
 	}
 	if (state == ExperimentGovernor::getStateString(ExperimentGovernor::Congratulations)) {
-		freqOutThread.lock();
+		if (freqOutThread.isThreadRunning()) freqOutThread.lock();
 		freqOutThread.setFreqCycle(settings.freqCycle);
 		freqOutThread.resetFreqCycle();
-		freqOutThread.unlock();
+		if (freqOutThread.isThreadRunning()) freqOutThread.unlock();
 	}
 }
 
@@ -774,6 +774,8 @@ void testApp::draw(){
 		}
 	}
 
+
+
 	// Draw oscilloscope data
 	if (showOscilloscope) {
 		//if (++eegPlotCounter == rawTimeWindow) {
@@ -814,7 +816,7 @@ void testApp::exit(){
 	printf("exit()\n");
 #endif
 	zeoThread.waitForThread(true);
-	freqOutThread.waitForThread(true);
+	if (freqOutThread.isThreadRunning()) freqOutThread.waitForThread(true);
 	logger.waitForThread(true);
 
 	//freqOutThread.lock();
@@ -836,9 +838,9 @@ void testApp::keyPressed(int key){
 void testApp::keyReleased(int key){
 	if (((char) key) == '+') {
 		midiMapMode = !midiMapMode;
-		freqOutThread.lock();
+		if (freqOutThread.isThreadRunning()) freqOutThread.lock();
 		freqOutThread.toggleMidiOut();
-		freqOutThread.unlock();
+		if (freqOutThread.isThreadRunning()) freqOutThread.unlock();
 	}
 	if (((char) key) == '1') {
 		midiout.sendControlChange(midiChannel, midiId, midiValue);
