@@ -30,6 +30,7 @@ void testApp::setup() {
 
 	// Variables to control output functionality
 	checkButtonPresses = settings.checkButtonPresses; // requires Arduino
+	triggeredEntrainmentCycle = settings.triggeredEntrainmentCycle; 
 	showInstructions = settings.showInstructions; 
 	showStimuli = settings.showStimuli; 
 
@@ -55,6 +56,13 @@ void testApp::setup() {
 	//Setup entrainment data listeners
 	ofAddListener(freqOutThread.outputChanged, this, &testApp::entrainmentOutChange);
 	ofAddListener(freqOutThread.freqChanged, this, &testApp::entrainmentFreqChange);
+
+	// Set the cycle to loop if we're not triggering the cycle
+	if (triggeredEntrainmentCycle) {
+		freqOutThread.setCycleLooping(false);
+	} else {
+		freqOutThread.setCycleLooping(true);
+	}
 
 	// Set the brainwave entrainment frequencies cycle... see brainTrainment.h
 	freqOutThread.setFreqCycle(settings.freqCycle);
@@ -648,6 +656,17 @@ void testApp::buttonDown(){
 		//	instructionsPlayer.buttonPressed();
 		//}
 		experimentGovernor.buttonPressed();
+
+		if (freqOutThread.isThreadRunning()) freqOutThread.lock();
+		// If we're triggering the freq cycle
+		if (triggeredEntrainmentCycle) {
+			// If a cycle isn't already running
+			if (freqOutThread.getCurrentFreq() == -1) {
+				// reset the freq cycle at the beginning
+				freqOutThread.resetFreqCycle();
+			}
+		}
+		if (freqOutThread.isThreadRunning()) freqOutThread.unlock();
 	}
 	isButtonPressed = true;
 }

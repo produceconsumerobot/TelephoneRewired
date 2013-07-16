@@ -34,6 +34,7 @@ class testApp : public ofBaseApp{
 		bool showInstructions;
 		bool showStimuli;
 		bool checkButtonPresses;
+		bool triggeredEntrainmentCycle;
 		bool showOscilloscope;
 		bool showScreenEntrainment;
 		bool showLedEntrainment;

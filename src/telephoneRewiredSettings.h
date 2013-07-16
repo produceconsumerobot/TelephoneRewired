@@ -59,7 +59,8 @@ public:
 		//string ledArduinoPort = "tty.usbmodem1411"; //Mac
 
 		// Arduino for taking button press inputs
-		inputArduinoPort = "\\\\.\\COM5";
+		//inputArduinoPort = "\\\\.\\COM5";
+		inputArduinoPort = "\\\\.\\COM4"; // Sean, debugging arduino
 
 		// Zeo Port
 		zeoPort = "\\\\.\\COM3"; // PC
@@ -75,12 +76,12 @@ public:
 
 
 		// Variables to control output functionality
-		checkButtonPresses = false; // requires Arduino
+		checkButtonPresses = true; // requires Arduino
+		triggeredEntrainmentCycle = false; 
 		showInstructions = false;
 		showStimuli = false;
-		triggeredEntrainmentCycle = true; 
-
-		showScreenEntrainment = false;
+		
+		showScreenEntrainment = true;
 		showLedEntrainment = false; // requires Arduino
 		playMidi = false;
 
@@ -98,7 +99,7 @@ public:
 
 		nInstructionPages = 3;
 
-		freqCycle = createFreqCycle(nBRAIN_MACHINE, BRAIN_MACHINE);
+		freqCycle = createFreqCycle(nENTRAINMENT_DEBUGGING, ENTRAINMENT_DEBUGGING);
 		freqCycleExp = createFreqCycle(nENTRAINMENT_SHOW, ENTRAINMENT_SHOW);
 	}
 };

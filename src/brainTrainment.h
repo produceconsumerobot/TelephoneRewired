@@ -244,13 +244,12 @@ static const float BRAIN_MACHINE_2P5X_SCREEN[nBRAIN_MACHINE_2P5X][2] = { // { fr
 };
 
 // Simple cycle to debug timing
-static const int nENTRAINMENT_DEBUGGING = 5;
+static const int nENTRAINMENT_DEBUGGING = 4;
 static const float ENTRAINMENT_DEBUGGING[nENTRAINMENT_DEBUGGING][2] = { // { frequency, duration(seconds) }
-	{0.5, 5}, //1
-	{1, 5}, //2
-	{2, 5}, //3
-	{4, 5}, //4
-	{8, 5}, //5
+	{GAMMA, 5}, //1
+	{THETA, 5}, //2
+	{GAMMA, 5}, //3
+	{THETA, 5}, //4
 };
 
 // Simple cycle to debug timing
@@ -266,7 +265,7 @@ static const float ENTRAINMENT_SHOW[nENTRAINMENT_SHOW][2] = { // { frequency, du
 
 // Simple cycle to debug timing
 static const int nENTRAINMENT_DEBUGGING2 = 5;
-static const float ENTRAINMENT_DEBUGGING2[nENTRAINMENT_DEBUGGING][2] = { // { frequency, duration(seconds) }
+static const float ENTRAINMENT_DEBUGGING2[nENTRAINMENT_DEBUGGING2][2] = { // { frequency, duration(seconds) }
 	{GAMMA, 10}, //1
 	{BETA, 10}, //2
 	{ALPHA, 10}, //3
