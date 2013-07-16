@@ -55,15 +55,16 @@ public:
 	{ 
 
 		// Arduino for outputing on LEDs
-		ledArduinoPort = "\\\\.\\COM4"; // Sean, Windows, Uno
+		ledArduinoPort = "\\\\.\\COM7"; // Sean, Windows, Uno
 		//string ledArduinoPort = "tty.usbmodem1411"; //Mac
 
 		// Arduino for taking button press inputs
 		//inputArduinoPort = "\\\\.\\COM5";
-		inputArduinoPort = "\\\\.\\COM4"; // Sean, debugging arduino
+		inputArduinoPort = "\\\\.\\COM8";
+		//inputArduinoPort = "\\\\.\\COM4"; // Sean, debugging arduino
 
 		// Zeo Port
-		zeoPort = "\\\\.\\COM3"; // PC
+		zeoPort = "\\\\.\\COM16"; // PC
 		//string zeoPort = "tty.usbserial"; //Mac
 
 		// Midi Port
@@ -77,17 +78,17 @@ public:
 
 		// Variables to control output functionality
 		checkButtonPresses = true; // requires Arduino
-		triggeredEntrainmentCycle = false; 
+		triggeredEntrainmentCycle = true; 
 		showInstructions = false;
 		showStimuli = false;
 		
-		showScreenEntrainment = true;
-		showLedEntrainment = false; // requires Arduino
-		playMidi = false;
+		showScreenEntrainment = false;
+		showLedEntrainment = true; // requires Arduino
+		playMidi = true;
 
-		readEEG = false; // requires Zeo
+		readEEG = true; // requires Zeo
 		showOscilloscope = false; // sloooows down screen drawing
-		logData = false;
+		logData = true;
 
 		// Experiment Timing Variables
 		stimulusOnTime =				.5;		// Seconds
@@ -99,7 +100,8 @@ public:
 
 		nInstructionPages = 3;
 
-		freqCycle = createFreqCycle(nENTRAINMENT_DEBUGGING, ENTRAINMENT_DEBUGGING);
+		//freqCycle = createFreqCycle(nENTRAINMENT_DEBUGGING, ENTRAINMENT_DEBUGGING);
+		freqCycle = createFreqCycle(nBRAIN_MACHINE, BRAIN_MACHINE);
 		freqCycleExp = createFreqCycle(nENTRAINMENT_SHOW, ENTRAINMENT_SHOW);
 	}
 };

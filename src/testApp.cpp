@@ -786,7 +786,7 @@ void testApp::draw(){
 	if (checkButtonPresses) {
 		inputArduino.update();
 		int input = inputArduino.getAnalog(0);
-		if (input > 512) {
+		if (input > 800) {
 			buttonDown();
 		} else {
 			buttonUp();
