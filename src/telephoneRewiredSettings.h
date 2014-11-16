@@ -64,7 +64,7 @@ public:
 		//inputArduinoPort = "\\\\.\\COM4"; // Sean, debugging arduino
 
 		// Zeo Port
-		zeoPort = "\\\\.\\COM16"; // PC
+		zeoPort = "\\\\.\\COM5"; // PC
 		//string zeoPort = "tty.usbserial"; //Mac
 
 		// Midi Port
@@ -77,8 +77,8 @@ public:
 
 
 		// Variables to control output functionality
-		checkButtonPresses = true; // requires Arduino
-		triggeredEntrainmentCycle = true; 
+		checkButtonPresses = false; // requires Arduino
+		triggeredEntrainmentCycle = false; 
 		showInstructions = false;
 		showStimuli = false;
 		
@@ -87,7 +87,7 @@ public:
 		playMidi = true;
 
 		readEEG = true; // requires Zeo
-		showOscilloscope = false; // sloooows down screen drawing
+		showOscilloscope = true; // sloooows down screen drawing
 		logData = true;
 
 		// Experiment Timing Variables
@@ -101,8 +101,10 @@ public:
 		nInstructionPages = 3;
 
 		//freqCycle = createFreqCycle(nENTRAINMENT_DEBUGGING, ENTRAINMENT_DEBUGGING);
+		//freqCycle = createFreqCycle(nBRAIN_MACHINE, BRAIN_MACHINE); // TR main cycle
+		//freqCycleExp = createFreqCycle(nENTRAINMENT_SHOW, ENTRAINMENT_SHOW); // TR main cycle
 		freqCycle = createFreqCycle(nBRAIN_MACHINE, BRAIN_MACHINE);
-		freqCycleExp = createFreqCycle(nENTRAINMENT_SHOW, ENTRAINMENT_SHOW);
+		freqCycleExp = createFreqCycle(nBRAIN_MACHINE, BRAIN_MACHINE);
 	}
 };
 

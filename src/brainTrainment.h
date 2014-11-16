@@ -301,6 +301,31 @@ static std::vector<FreqOutThread::freqInterval> createFreqCycle(const int nFreqs
 	return freqCycle;
 };
 
+static const float mult = 60.;
+static const float delay1 = 2.*mult;
+static const float duration1 = 5.*mult;
+static const float duration2 = 5.*mult;
+
+// Simple cycle to debug timing
+static const int nMSSM_PILOT = 16;
+static const float MSSM_PILOT[nMSSM_PILOT][2] = { // { frequency, duration(seconds) }
+	{1./(duration1*2.*2.), duration1*2.}, //10 mins
+	{GAMMA, duration1}, // 5 mins
+	{1./(delay1*2.), delay1}, // 2 mins
+	{BETA, duration1}, // 5 mins
+	{1./(delay1*2.), delay1}, //2 mins
+	{ALPHA, duration1}, // 5 mins
+	{1./(delay1*2.), delay1}, // 2 mins
+	{THETA, duration1}, // 5 mins
+	{1./(duration1*2.*2.), duration1*2.}, // 10 mins
+	{GAMMA, duration2}, // 5 mins
+	{1./(delay1*2.), delay1}, // 2 mins
+	{BETA, duration2}, // 5 mins
+	{1./(delay1*2.), delay1}, // 2 mins
+	{ALPHA, duration2}, // 5 mins
+	{1./(delay1*2.), delay1}, // 2 mins
+	{THETA, duration2}, // 5 mins
+};
 
 
 #endif
